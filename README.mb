@@ -1,0 +1,154 @@
+Landing Page (onyl if not logged in)
+- minimal navbar (login, sign up)
+- hero w sign up button
+- about (show different parts of what it does)
+- sign up button again at bottom
+^think this requires no database
+
+Functions
+- sign up button --> signup
+- login button --> login
+- about button --> about
+---------------------------------
+
+Login Page
+- username
+- password
+- forgot password?
+
+Functions
+- check validity
+- check database
+---------------------------------
+
+Signup Page
+- username (check to see if exists)
+- email (verification?)
+- password (8+ chars, number included)
+- confirm password
+
+Functions
+- check validity
+- possible verify?
+- save to database
+---------------------------------
+
+react query?
+check database first then do api call if not there
+another cache on backend for recent searches or popular searches
+MyAniList? 30 per minute
+
+ONCE LOGGED IN 
+These are all accessible from navbar on side of page
+Home Feed
+- LEFT
+    - Navbar on side?
+- MIDDLE
+    - Feed of everyones contributions (recent to farthest away)
+    - reviews, comments, clips posted
+    - at top potentially area for yo to post something? (comment and photo/video, anime, poll)
+
+^app database
+    ^ feed table?
+- RIGHT
+    - Upcoming Episodes
+    ^stored upcoming episodes table?
+
+DATABASE
+^API/app database?
+    - Friend Activity?
+^app database
+    ^ friend activity table?
+
+FUNCTIONS
+- grab feed from database
+- like post
+- possibly comment on post?
+- clicking profile takes you to that users profile (public/private?)
+- grab upcoming episodes from database
+- posting post 
+
+COMPONENTS
+- Navbar
+- Post Feed 
+    - Posts Component
+    - Make a Post
+---------------------------------
+
+My Animes
+    - Navbar (Overview, Watchig, Cmpleted, Plan to Watch)
+    - Each bar tab has correspondng info with anime card
+    - can click on anime cards which take to info page
+
+DATABASE
+^app database to get animes, API/app to get info
+    ^anime cards/info table, else fetch
+
+FUNCTIONS
+- fetch all this data from database
+- clicking each bar changes info below
+- clicking anime cards
+
+COMPONENTS
+- Side Navbar
+- Top Navbar
+- Seperate categories components for overview
+- Seperate bottom part component for eah navbar
+---------------------------------
+Anime Info Page
+    - Title, year, episodes, genre, 
+    user releationship to it, favorited
+^API/app database
+    ^anime info table, else fetch
+    - Below
+        - overview, cast, episodes, 
+        reviews, recommendations if u liked this?, where to watch
+^API/app databse
+    anime info table, else fetch
+^ reviews app database
+Browse
+    - Search and filter
+    - trending
+    - maybe different genres or groups to scroll through
+    - each anime card should be able to mark as watched, 
+    leave a review, add to "plan to watch", favorite (automaticaaly mark as watched)
+^ API/app database
+    ^anime table for same search, else fetch
+Lists
+    - All lists, owned by you, liked lists
+    - create list at top
+^ app database
+    ^lists table
+Create List
+    - List title, add animes search bar, animes added
+^API/app database for anime search
+    ^anime table, else fetch
+Calendar
+    - Maybe full calnder or week calender at top?
+    - Upcoming below for next week
+^API/app database
+    ^ anime release table, maybe grab once a week or something
+Following
+    - search at top for usernames or people
+    - list of friends (following), can cick on profiles and see info  activity
+    - followers
+^app database
+    ^friends table
+    ^users table for viewing one person
+Notifications
+    - upcoming animes notificaitons and friend notifications
+    - maybe notif for day of release and time
+^ app database?
+    ^notifications table
+Messages Possibly
+    - Messages from friends
+^ app database
+^ frends table, message table?
+^MAYBE DO THIS TAB LATER
+Profile
+    - Name + Pfp
+    - Watched, watching, plan to watch, reviews, follwoers stats
+    - animes, lists, reviews, activity, tabs
+^ app database
+^app for stored animes
+^user table

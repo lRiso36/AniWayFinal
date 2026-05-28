@@ -1,0 +1,180 @@
+import { useState } from "react";
+import { SignUpNav } from "../components/SignUpComponents/SignUpNav";
+import { useNavigate } from "react-router-dom";
+
+export const Login = () => {
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        username: "",
+        password: "",
+    });
+
+    function handleSubmit() {
+        // ADD DATABASE STUFF
+        // CHECK IF EXISTS AND WHATNOT
+        console.log(formData)
+    }
+
+    return (
+        <main className="
+            min-h-screen
+            bg-gradient-to-b
+            from-[#020204]
+            via-[#04050A]
+            to-[#08090F]
+            text-white
+            px-4
+            sm:px-6
+            lg:px-8
+        ">
+            <nav>
+                <SignUpNav
+                preButton="Don't have an account?"
+                button="Sign Up"
+                />
+            </nav>
+
+            <div className="
+                flex
+                flex-col
+                items-center
+                text-center
+                pt-28
+                pb-10
+            ">
+                <h2 className="
+                    text-2xl
+                    sm:text-4xl
+                    font-bold
+                    tracking-tight
+                ">Welcome Back</h2>
+                <p className="
+                    text-sm
+                    sm:text-base
+                    text-zinc-300
+                    mt-1
+                    max-w-md
+                ">Continue your anime journey</p>
+
+                <div className="
+                    mt-6
+                    w-full
+                    max-w-md
+                    md:max-w-xl
+                    lg:max-w-2xl
+                    bg-white/5
+                    border
+                    border-white/10
+                    rounded-2xl
+                    p-5
+                    sm:p-8
+                    md:p-10
+                    text-left
+                ">
+                    <div className="space-y-5">
+                        {/* Username */}
+                        <div className="space-y-1">
+                            <label className="text-sm text-zinc-400">
+                                Username <span className="text-purple-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Your username"
+                                className="
+                                w-full
+                                bg-zinc-900
+                                border
+                                border-white/10
+                                rounded-xl
+                                px-4
+                                py-3
+                                mt-1
+                                text-white
+                                text-sm
+                                sm:text-base
+                                placeholder-zinc-600
+                                focus:outline-none
+                                focus:border-purple-500/60
+                                transition
+                                "
+                                value={formData.username}
+                                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div className="space-y-1">
+                            <label className="text-sm text-zinc-400">
+                                Password <span className="text-purple-500">*</span>
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="Your password"
+                                className="
+                                w-full
+                                bg-zinc-900
+                                border
+                                border-white/10
+                                rounded-xl
+                                px-4
+                                py-3
+                                mt-1
+                                text-white
+                                text-sm
+                                sm:text-base
+                                placeholder-zinc-600
+                                focus:outline-none
+                                focus:border-purple-500/60
+                                transition
+                                "
+                                value={formData.password}
+                                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                            />
+                            <p
+                                className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer mt-1 text-right"
+                                onClick={() => navigate("/forgot-password")}
+                            >
+                                Forgot password?
+                            </p>
+                        </div>
+
+                        {/* Submit */}
+                        <button
+                            className="
+                            w-full
+                            py-3
+                            sm:py-4
+                            rounded-xl
+                            font-semibold
+                            text-white
+                            text-sm
+                            sm:text-base
+                            mt-4
+                            transition
+                            "
+                            style={{
+                                background: formData.username && formData.password
+                                    ? "#9333ea"
+                                    : "rgba(147,51,234,0.3)"
+                            }}
+                            disabled={!formData.username || !formData.password}
+                            onClick={handleSubmit}
+                        >
+                            Login
+                        </button>
+
+                        <p className="text-center text-zinc-500 text-sm mt-2">
+                            Don't have an account?{" "}
+                            <span
+                                className="text-purple-400 hover:text-purple-300 cursor-pointer"
+                                onClick={() => navigate("/signup")}
+                            >
+                                Sign up
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    )
+}

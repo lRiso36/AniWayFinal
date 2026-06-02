@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import supabase from '../supabase';
 
 type AnimeType = {
@@ -106,18 +107,14 @@ const ANIME_DETAIL_QUERY = `
     }
 }
 `
+
 //query search_cache table, if query matches any query in table get its id back
 export const searchAnime = async (query: string): Promise<AnimeType[]> => {
-    if (!query.trim()) {
-        return [];
-    }
-
-    const normalizedQuery = query.trim().toLowerCase();
 
     const {data: cachedSearch, error: cachedSearchError } = await supabase
     .from('search_cache')
     .select('id')
-    .eq('query', normalizedQuery)
+    .eq('query', query)
     .maybeSingle()
 
     // if theres an error, log but dont throw bc it might just go to API search next
@@ -154,6 +151,14 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
 
             //if there is animeData, return an array of anime objects with all data correctly mapped
             if (animeData && animeData.length > 0) {
+                const {data: genreData, error:genreError} = await supabase
+                .from('anime_genres')
+                .select('anilist_id, genre')
+                .in('anilist_id', anilistIds)
+
+                if (genreError) throw genreError;
+
+
                 return animeData.map((anime:any) => ({
                 anilistId: anime.anilist_id,
                 title: {
@@ -167,9 +172,9 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
                 bannerImage: anime.banner_image,
                 year: anime.year,
                 episodes: anime.episodes,
-                genres: [],
+                genres: genreData?.filter(g => g.anilist_id === anime.anilist_id).map(g => g.genre) ?? [],
                 description: anime.description,
-            }))
+                }))
 
             } /// end of animeData if
         } //end of cachedAnime if
@@ -180,7 +185,7 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
         const options = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({query: SEARCH_QUERY, variables: {search: normalizedQuery} })
+            body: JSON.stringify({query: SEARCH_QUERY, variables: {search: query} })
         }
         const response = await fetch('https://graphql.anilist.co', options);
 
@@ -238,7 +243,7 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
         const {data: searchCacheData, error:searchCacheError} = await supabase
         .from('search_cache')
         .upsert(
-            { query: normalizedQuery},
+            { query: query},
             { onConflict: 'query'}
         )
         .select()
@@ -268,6 +273,21 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
             {onConflict: 'search_cache_id,anilist_id'}
         )
 
+        const toInsertGenres = results.flatMap(anime => ( 
+                anime.genres.map(genre => ({
+                anilist_id: anime.anilistId,
+                genre: genre
+                }))
+        ));
+
+        await supabase
+        .from('anime_genres')
+        .upsert(
+            toInsertGenres,
+            {onConflict: 'anilist_id,genre'}
+        )
+
+
         return results;
     } catch (err) {
         console.error('Failed to search anime:', err)
@@ -275,9 +295,10 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
     }
 }
 
+//get anime by id and all infor for details page. check cache first them api call
 export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> => {
     
-    //get data for corresponding anilist id
+    //get cached anime data for corresponding anilist id
     const {data: cachedAnimeData, error: cachedAnimeDataError} = await supabase
     .from('anime')
     .select('*')
@@ -291,39 +312,48 @@ export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> =
 
     if (cachedAnimeData) {
 
+        // get genre data for anime
+        const {data: genreData, error:genreError} = await supabase
+                .from('anime_genres')
+                .select('anilist_id, genre')
+                .eq('anilist_id', id)
+
+        if (genreError) throw genreError;
+
         //returns array of character objects
         const {data: cachedCharacters, error: cachedCharactersError} = await supabase
         .from('characters')
         .select('*')
         .eq('anime_anilist_id', cachedAnimeData.anilist_id)
 
-        //should this throw error or should we api fetch just for characters?
+        //if error dont throw we can handle it
         if(cachedCharactersError) {
             console.error(cachedCharactersError)
         }
 
+        //get array of characterIds
+        const characterIds = cachedCharacters?.map((character) => character.id) ?? [];
 
-        if(cachedCharacters && cachedCharacters.length > 0) {
-            const characterIds = cachedCharacters.map((character) => character.id);
+        //get voice actors if theres a list of character ids
+        const {data: cachedVoiceActors, error: cachedVoiceActorsError} = characterIds.length > 0
+        ? await supabase.from('voice_actors')
+        .select('*')
+        .in('character_id', characterIds)
+        : {data: [], error: null};
 
-             const {data: cachedVoiceActors, error: cachedVoiceActorsError} = await supabase
-            .from('voice_actors')
-            .select('*')
-            .in('character_id', characterIds)
-
-            if (cachedVoiceActorsError) {
-                console.error(cachedVoiceActorsError);
-            }
-            if(cachedVoiceActors && cachedVoiceActors.length > 0) {
-
-            const characters = cachedCharacters.map((character) => ({
-                id: character.character_anilist_id,
-                name: character.name,
+        if (cachedVoiceActorsError) {
+            console.error(cachedVoiceActorsError);
+        }
+    
+        //get characters if theres cached Characters
+        const characters = (cachedCharacters ?? []).map((character) => ({
+            id: character.character_anilist_id,
+            name: character.name,
                 role: character.role,
-                image: character.image,
-                voiceActors: cachedVoiceActors
-                .filter((actor) => actor.character_id === character.id)
-                .map((a) => ({
+            image: character.image,
+            voiceActors: (cachedVoiceActors ?? [])
+            .filter((actor) => actor.character_id === character.id)
+            .map((a) => ({
                     id: a.voice_actor_anilist_id,
                     name: a.name,
                     language: a.language,
@@ -344,12 +374,10 @@ export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> =
                 bannerImage: cachedAnimeData.banner_image,
                 year: cachedAnimeData.year,
                 episodes: cachedAnimeData.episodes,
-                genres: [],
+                genres: genreData?.map(g => g.genre) ?? [],
                 description: cachedAnimeData.description,
                 characters,
             } // end of return
-            } //end of voice actors if
-        } // end of characters if
     } // end of data if
 
     //if no t cached, fetch from anilist
@@ -428,6 +456,18 @@ export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> =
             throw animeUpsertError
         }
 
+        const toInsertGenres = result.genres.map(genre => ({
+            anilist_id: result.anilistId,
+            genre: genre
+        }));
+
+        await supabase
+        .from('anime_genres')
+        .upsert(
+            toInsertGenres,
+            {onConflict: 'anilist_id,genre'}
+        )
+
         const toInsertCharacters = result.characters.map((character) => ({
             character_anilist_id: character.id,
             anime_anilist_id: result.anilistId,
@@ -493,3 +533,4 @@ export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> =
         return null;
     }
 }
+

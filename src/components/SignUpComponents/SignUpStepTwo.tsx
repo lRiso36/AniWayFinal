@@ -28,8 +28,26 @@ export const SignUpStepTwo = ({formData, nextStep,setFormData}:SignUpStepTwoType
     const AVATARS: string[]= Array.from(
         { length: 44 }, (_, i) => `/animeAvatars/avatar${i+1}.png`)
 
-    const genres = ["Action", "Romance", "Isekai", "Slice of Life", "Horror", 
-        "Comedy", "Mecha", "Fantasy","Harem", "Psychological"];
+    const genres = [  "Action",
+    "Adventure",
+    "Avant Garde",
+    "Award Winning",
+    "Boys Love",
+    "Comedy",
+    "Drama",
+    "Ecchi",
+    "Fantasy",
+    "Girls Love",
+    "Gourmet",
+    "Horror",
+    "Mystery",
+    "Romance",
+    "Sci-Fi",
+    "Slice of Life",
+    "Sports",
+    "Supernatural",
+    "Suspense"
+    ];
    
     const [selectedAvatar, setSelectedAvatar] = useState<string>(formData.avatar || AVATARS[0])
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);

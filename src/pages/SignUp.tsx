@@ -5,6 +5,7 @@ import { SignUpStepOne } from "../components/SignUpComponents/SignUpStepOne";
 import { SignUpContainer } from "../components/SignUpComponents/SignUpContainer";
 import { SignUpStepThree } from "../components/SignUpComponents/SignUpStepThree";
 import { SignUpStepTwo } from "../components/SignUpComponents/SignUpStepTwo";
+import { signUp } from "../services/authServices";
 
 export const SignUp = () => {
     const navigate = useNavigate()
@@ -22,15 +23,37 @@ export const SignUp = () => {
         favorites: [] as AnimeType[],
     });
     const [agreed, setAgreed] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    // ADD USERNAME CHECK FOR UNIQUENESS IN DATABASE
     // variable functions
-    const nextStep = () => {
+    const nextStep = async () => {
+        if (loading) return;
+
         if (step === 3) {
-            setStep(4)
+            try {
+                console.log("FINAL FAVORITES", formData.favorites);
+                await signUp(
+                    formData.username,
+                    formData.email,
+                    formData.password,
+                    formData.avatar,
+                    formData.displayName || formData.username,
+                    formData.bio,
+                    formData.genre,
+                    formData.favorites
+                );
+                setStep(4)
+
                 setTimeout(() => {
                 navigate("/login")
              }, 2000)
+
+            }catch (error:any) {
+                console.error(error.message);
+                alert(error.message || "Failed to create account");
+            } finally {
+                setLoading(false)
+            }
         } else {
             setStep(prev => prev + 1);
         }

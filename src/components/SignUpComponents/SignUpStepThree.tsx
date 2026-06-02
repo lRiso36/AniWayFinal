@@ -25,22 +25,41 @@ type SignUpStepThreeType = {
 
 
 export const SignUpStepThree = ({formData, setFormData, nextStep}: SignUpStepThreeType) => {
-    const [selectedAnimes, setSelectedAnimes] = useState<AnimeType[]>(formData.favorites || []);
     
     const handleSelect = (anime: AnimeType) => {
-        if (selectedAnimes.find(a => a.anilistId === anime.anilistId)){
-            setSelectedAnimes(prev => prev.filter(a => a.anilistId !== anime.anilistId))
-        } else {
-            if (selectedAnimes.length >= 5) return
-            setSelectedAnimes(prev => [...prev, anime])
-        }
+        setFormData(prev => {
+            //is it already selected?
+            const alreadySelected = prev.favorites.some(
+                a => a.anilistId === anime.anilistId
+            );
+
+            //if already sleetced, filter out
+            if (alreadySelected) {
+                return {
+                    ...prev,
+                    favorites: prev.favorites.filter(
+                        a => a.anilistId !== anime.anilistId
+                    )
+                }
+            } // end of remove anime from favorites
+
+            //if more than 5 dont add
+            if (prev.favorites.length >= 5) return prev;
+
+            //add favorites finally
+            return {
+                ...prev,
+                favorites: [...prev.favorites, anime]
+            }
+        })
     }
 
     const handleSubmit = () => {
-        setFormData(prev => ({
-            ...prev,
-            favorites: selectedAnimes
-        }))
+        console.log("submitting favorites:", formData.favorites)
+        // setFormData(prev => ({
+        //     ...prev,
+        //     favorites: formData.favorites
+        // }))
         nextStep();
         }
 
@@ -49,18 +68,18 @@ export const SignUpStepThree = ({formData, setFormData, nextStep}: SignUpStepThr
         <div className="space-y-5">
                 <AnimeSearch
                 onSelect={handleSelect}
-                selectedAnimes={selectedAnimes}
+                selectedAnimes={formData.favorites}
                 />
                 <div>
                     <p className="text-zinc-300 text-base">Selected Animes</p>
             
-                    {selectedAnimes.length > 0 && (
+                    {formData.favorites.length > 0 && (
                     <div>
                         <p className="text-zinc-300 text-sm mb-2">
-                        Favorites ({selectedAnimes.length}/5)
+                        Favorites ({formData.favorites.length}/5)
                         </p>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                        {selectedAnimes.map((anime) => (
+                        {formData.favorites.map((anime) => (
                         <div key={anime.anilistId} className="flex flex-col relative">
                         {/* X button */}
                         <button
@@ -84,7 +103,7 @@ export const SignUpStepThree = ({formData, setFormData, nextStep}: SignUpStepThr
                     </div>
                 </div>
                         )}
-                        {selectedAnimes.length === 0 && (
+                        {formData.favorites.length === 0 && (
                             <p className="text-zinc-500 text-base mb-2">
                             No favorites added :(
                             </p>

@@ -2,12 +2,16 @@ import type { AnimeType } from "../types/AnimeType";
 import type { UserAnimeEntry, UserAnimeStatus } from "../types/UserAnimeEntry";
 import { useState, useRef, useEffect } from "react";
 import { AnimeCardMenu } from "./AnimeCardMenu";
+import { LogModal } from "./LogModal";
+import { RemoveModal } from "./RemoveModal";
+import { toggleIsFavorite } from "../services/userAnimeService";
+import { useNavigate } from "react-router-dom";
 
 type AnimeCardType = {
   anime: AnimeType;
   entry?: UserAnimeEntry;
+  getData: () => Promise<void>;
   onStatusChange?: (anilistId: number, status: UserAnimeStatus) => void;
-  onLogEpisode?: (anilistId: number) => void;
   onRate?: (anilistId: number) => void;
   onReview?: (anilistId: number) => void;
   onFavorite?: (anilistId: number) => void;
@@ -15,16 +19,12 @@ type AnimeCardType = {
   onRemove?: (anilistId: number) => void;
 };
 
-const STATUSES: { id: UserAnimeStatus; label: string }[] = [
-  { id: "watching", label: "Watching" },
-  { id: "completed", label: "Completed" },
-  { id: "plan-to-watch", label: "Plan to Watch" },
-];
-
-export const AnimeCard = ({ anime, entry }: AnimeCardType) => {
+export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [openLeft, setOpenLeft] = useState(false);
+  const [activeModal, setActiveModal] = useState<'log' | 'favorite' | 'remove' | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleCLick = (e: MouseEvent) => {
@@ -35,18 +35,32 @@ export const AnimeCard = ({ anime, entry }: AnimeCardType) => {
     return () => document.removeEventListener("mousedown", handleCLick);
   }, [])
 
+  const toggleFavorite = async () => {
+    try {
+      await toggleIsFavorite(anime.anilistId, anime.episodes)
+      getData();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   return (
     <div  ref={menuRef} className="flex flex-col gap-2 relative">
       {/* cover image */}
-      <div className="relative aspect-[3/4] rounded-lg overflow-hidden">
+      <div className="relative group aspect-[3/4] rounded-lg overflow-hidden"
+      onClick={() => navigate(`/anime/${anime.anilistId}`)}
+      >
         <img
           src={anime.coverImage.large}
           alt={anime.title.english ?? anime.title.romaji}
           className="w-full h-full object-cover"
+          
         />
         <div className="absolute top-1 right-1 z-20">
+          
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               if (!menuOpen) {
                 const pos = menuRef.current?.getBoundingClientRect();
                 if (pos) {
@@ -68,7 +82,6 @@ export const AnimeCard = ({ anime, entry }: AnimeCardType) => {
             hover:bg-black/80 
             transition-colors 
             rounded-md
-            group
             "
             >
             <svg width="16" height="16" 
@@ -81,12 +94,24 @@ export const AnimeCard = ({ anime, entry }: AnimeCardType) => {
             </svg>
             </button>
         </div>
+        <div className="absolute inset-0 
+        border-2 border-purple-500 rounded-lg 
+        opacity-0 group-hover:opacity-100 
+        transition-opacity z-10" />
         </div>
         {/* image overflow hidden closed now */}
               <AnimeCardMenu
               menuOpen={menuOpen}
               openLeft={openLeft}
+              entry={entry}
               onClose={() => setMenuOpen(false)}
+              onSelect={(id) => {
+                if (id === 'log') setActiveModal('log');
+                if (id === 'favorite') {
+                   toggleFavorite();
+                };
+                if (id === 'remove') setActiveModal('remove');
+              }}
               />
       {/* title and episode info */}
       <div>
@@ -107,6 +132,26 @@ export const AnimeCard = ({ anime, entry }: AnimeCardType) => {
         />
         </div>
 )}
+        <LogModal
+        isOpen={activeModal === 'log'}
+        onClose={() => setActiveModal(null)}
+        anime={anime}
+        currentEntry={entry}
+        onSave={() => {
+          setActiveModal(null);
+          getData();
+        }}
+        />
+        <RemoveModal
+        isOpen={activeModal === 'remove'}
+        onClose={() => setActiveModal(null)}
+        anime={anime}
+        currentEntry={entry}
+        onSave={() => {
+          setActiveModal(null);
+          getData();
+        }}
+        />
     </div>
   );
 };

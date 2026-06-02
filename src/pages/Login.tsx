@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { SignUpNav } from "../components/SignUpComponents/SignUpNav";
 import { useNavigate } from "react-router-dom";
+import { logIn } from "../services/authServices";
 
 export const Login = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        username: "",
+        email: "",
         password: "",
     });
 
-    function handleSubmit() {
-        // ADD DATABASE STUFF
-        // CHECK IF EXISTS AND WHATNOT
-        console.log(formData)
+    async function handleSubmit() {
+        try {
+            await logIn(formData.email, formData.password);
+            navigate("/home");
+        } catch (error: any) {
+            console.error(error.message);
+        }
     }
 
     return (
@@ -72,14 +76,14 @@ export const Login = () => {
                     text-left
                 ">
                     <div className="space-y-5">
-                        {/* Username */}
+                        {/* Email */}
                         <div className="space-y-1">
                             <label className="text-sm text-zinc-400">
-                                Username <span className="text-purple-500">*</span>
+                                Email <span className="text-purple-500">*</span>
                             </label>
                             <input
-                                type="text"
-                                placeholder="Your username"
+                                type="email"
+                                placeholder="aniway@gmail.com"
                                 className="
                                 w-full
                                 bg-zinc-900
@@ -97,8 +101,8 @@ export const Login = () => {
                                 focus:border-purple-500/60
                                 transition
                                 "
-                                value={formData.username}
-                                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                                value={formData.email}
+                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                             />
                         </div>
 
@@ -153,11 +157,11 @@ export const Login = () => {
                             transition
                             "
                             style={{
-                                background: formData.username && formData.password
+                                background: formData.email && formData.password
                                     ? "#9333ea"
                                     : "rgba(147,51,234,0.3)"
                             }}
-                            disabled={!formData.username || !formData.password}
+                            disabled={!formData.email || !formData.password}
                             onClick={handleSubmit}
                         >
                             Login

@@ -1,19 +1,26 @@
-
+import type { UserAnimeEntry } from "../types/UserAnimeEntry";
 
 type AnimeCardMenuType = {
     menuOpen: boolean;
     openLeft: boolean;
+    entry?: UserAnimeEntry
     onClose: () => void;
+    onSelect: (id:string) => void;
 }
 
-const MENU_ITEMS = [
-  { label: "📺 Log", id: "log" },
-  { label: "⭐ Rate & Review", id: "rate-review" },
-  { label: "❤️ Add to Favorites", id: "favorite" },
-  { label: "📋 Add to List", id: "list" },
-];
 
-export const AnimeCardMenu = ({ menuOpen, openLeft, onClose }: AnimeCardMenuType) => {
+
+export const AnimeCardMenu = ({ menuOpen, openLeft, entry, onClose, onSelect }: AnimeCardMenuType) => {
+    const MENU_ITEMS = [
+      { label: "📺 Log", id: "log" },
+      { label: "⭐ Rate & Review", id: "rate-review" },
+      { label:
+        entry?.isFavorite ? "❤️ Unfavorite" : " ❤️ Add to favorites", 
+        id: "favorite" 
+      },
+      { label: "📋 Add to List", id: "list" },
+    ];
+  
     if (!menuOpen) return null;
 
     return (
@@ -31,10 +38,15 @@ export const AnimeCardMenu = ({ menuOpen, openLeft, onClose }: AnimeCardMenuType
                   w-full text-left px-4 py-1.5 
                   text-sm text-white/80 hover:bg-white/5 
                   transition-colors"
+                  onClick={() => {onSelect(item.id); onClose(); }}
                   > {item.label}</button>
                 ))}
                 <div className="border-t border-white/10 my-1" />
-                  <button className="w-full text-left px-4 py-1.5 text-sm text-red-400 hover:bg-white/5 transition-colors">
+                  <button 
+                  className="w-full text-left px-4 py-1.5 
+                  text-sm text-red-400 hover:bg-white/5 transition-colors"
+                  onClick={() => {onSelect("remove"); onClose();}}
+                  >
                   🗑️ Remove
                   </button>
               </div>

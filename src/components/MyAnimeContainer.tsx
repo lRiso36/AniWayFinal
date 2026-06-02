@@ -8,11 +8,12 @@ type MyAnimeContainerType = {
     onViewAll?: () => void;
     mode?: "row" | "grid";
     entries?: UserAnimeEntry[];
+    getData: () => Promise<void>;
 }
 
 // PROGRESS WILL COME FROM DATABASE LATER
 
-export const MyAnimeConatiner = ({title, items, onViewAll, mode, entries}: MyAnimeContainerType) => {
+export const MyAnimeConatiner = ({title, items, onViewAll, mode, entries, getData}: MyAnimeContainerType) => {
 
     return (
         <div className="flex flex-col gap-4">
@@ -35,21 +36,28 @@ export const MyAnimeConatiner = ({title, items, onViewAll, mode, entries}: MyAni
             </button>
             )}
         </div>
-        <div className={
+        {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-white/30">
+                <p className="text-4xl mb-3 lg:text-6xl">🎌</p>
+                <p className="text-sm lg:text-base">No anime here yet</p>
+            </div>
+        ) :
+            <div className={
             mode === "row"
             ? "flex gap-3 overflow-x-auto scrollbar-none pb-4"
             : "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4"
-            
-        }>
+            }>
             {items.map((anime) => (
-                 <div key={anime.anilistId} className={mode === "row" ? "w-[100px] sm:w-[140px] shrink-0" : "w-full"}>
-                <AnimeCard 
-                anime={anime} 
-                entry={entries?.find(e => e.anilistId === anime.anilistId)}
-                />
+                <div key={anime.anilistId} className={mode === "row" ? "w-[100px] sm:w-[140px] shrink-0" : "w-full"}>
+                    <AnimeCard 
+                    anime={anime} 
+                    entry={entries?.find(e => e.anilistId === anime.anilistId)}
+                    getData={getData}
+                    />
                 </div>
                 ))}
-        </div>
+            </div>
+        }
     </div>
 
     )

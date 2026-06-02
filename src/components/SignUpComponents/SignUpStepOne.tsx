@@ -1,5 +1,8 @@
 // STILL NEED DATABASE STUFF
+import { checkUsernameAvailable, checkEmailAvailable } from "../../services/authServices";
 import type { AnimeType } from "../../types/AnimeType";
+import { useState, useEffect } from "react";
+
 type SignUpSTepOneType = {
     formData: {
         username: string;
@@ -40,15 +43,52 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
     const passwordHasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password);
     const validPassword = passwordLengthValid && passwordHasSpecialChar && passwordHasNumber;
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-
-    // function
-    function handleSubmit() {
-        // ADD USERNAME CHECK
-        if (
+    const [usernameError, setUsernameError] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const approved = 
             passwordsMatch
             && validPassword
             && emailValid 
             && agreed
+            && !usernameError
+            && !emailError;
+
+    useEffect(() => {
+        if (!formData.username) return;
+        const username = formData.username;
+
+        const timer = setTimeout(async () => {
+            const availableUsername = await checkUsernameAvailable(username);
+            if (!availableUsername) {
+                setUsernameError(`Username is already taken`);
+            } else {
+                setUsernameError('');
+            } //end of if else
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [formData.username]);
+
+    useEffect(() => {
+        if (!formData.email) return;
+        const email = formData.email;
+
+        const timer = setTimeout(async () => {
+            const availableEmail = await checkEmailAvailable(email);
+            if (!availableEmail) {
+                setEmailError('Email already used for an account');
+            } else {
+                setEmailError('')
+            }
+        }, 300)
+
+        return () => clearTimeout(timer);
+    }, [formData.email]);
+
+    // function
+    async function handleSubmit() {
+        if (
+            approved
         ) {
             nextStep();
         }
@@ -58,6 +98,11 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
             <div className="space-y-1">
                 {/* username */}
                 <label className="text-sm text-zinc-400">Username <span className="text-purple-500">*</span></label>
+                {usernameError && (
+                            <p className="text-red-400 text-sm mt-1">
+                                {usernameError}
+                            </p>
+                )}
                 <input
                     type="text"
                     placeholder="Choose a unique name"
@@ -91,6 +136,11 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                         <p className="text-red-400 text-xs mt-2">
                             Please enter a valid email address
                         </p>
+                    )}
+                    {emailError && (
+                            <p className="text-red-400 text-sm mt-1">
+                                {emailError}
+                            </p>
                     )}
                     <label className="text-sm text-zinc-400">Email <span className="text-purple-500">*</span></label>
                     <input
@@ -238,15 +288,14 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                         mt-4 
                         transition"
                        style={{
-                        background: agreed 
+                        background: approved 
                         ? "#9333ea" 
                         : "rgba(147,51,234,0.3)"
                         }}
                         onClick={handleSubmit}
-                        disabled={!(passwordsMatch
-                        && validPassword
-                        && emailValid 
-                        && agreed)}
+                        disabled={!(
+                        approved
+                        )}
                         >
                         Create Account
                     </button>

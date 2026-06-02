@@ -1,14 +1,43 @@
 import { MyAnimeNavBar } from "../components/MyAnimeNavBar"
 import { MyAnimeConatiner } from "../components/MyAnimeContainer"
 import { useSearchParams } from "react-router-dom"
-import { DUMMY_WATCHING, DUMMY_COMPLETED, DUMMY_PLAN, DUMMY_ENTRIES } from "../data/MyAnimeDummy"
-
-
+import {getUserAnime} from "../services/userAnimeService"
+import type { UserAnimeEntry } from "../types/UserAnimeEntry"
+import type { AnimeType } from "../types/AnimeType"
+import { useState, useEffect } from "react"
 
 export const MyAnime = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const [animeList, setAnimeList] = useState<{entry: UserAnimeEntry, anime: AnimeType}[]>([]);
     const tab = searchParams.get("tab") || "overview";
+    const fetchAnimeData = async () => {
+        setLoading(true)    
+        const data = await getUserAnime();
+        setAnimeList(data);
+        setLoading(false);
+    }
+    const [loading, setLoading] = useState(true);
+
+
+    useEffect(() => {
+        fetchAnimeData();
+    }, []);
+
+    //sort animes
+    const watching = animeList.filter(item => item.entry.status === 'watching').map(item => item.anime);
+    const completed = animeList.filter(item => item.entry.status === 'completed').map(item => item.anime);
+    const planToWatch = animeList.filter(item => item.entry.status === 'plan-to-watch').map(item => item.anime);
+    const favorites = animeList.filter(item => item.entry.isFavorite).map(item => item.anime);
+    const entries = animeList.map(item => item.entry);
     
+
+    if (loading) return (
+    <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+    
+)
+
     return (
         <div className="min-h-screen bg-[#0a0a14] ">
         <div className="
@@ -30,33 +59,35 @@ export const MyAnime = () => {
             <div>
             <MyAnimeConatiner 
             title="Watching" 
-            items={DUMMY_WATCHING} 
+            items={watching} 
             mode="row"
-            entries={DUMMY_ENTRIES}
+            entries={entries}
             onViewAll={() => setSearchParams({tab: "watching"})}
+            getData={fetchAnimeData}
             />
             <MyAnimeConatiner 
             title="Completed"   
-            items={DUMMY_COMPLETED} 
+            items={completed} 
             mode="row"
-            entries={DUMMY_ENTRIES}
+            entries={entries}
             onViewAll={() => setSearchParams({tab: "completed"})}
+            getData={fetchAnimeData}
             />
             <MyAnimeConatiner 
             title="Plan to Watch" 
-            items={DUMMY_PLAN} 
+            items={planToWatch} 
             mode="row"
-            entries={DUMMY_ENTRIES}
+            entries={entries}
             onViewAll={() => setSearchParams({tab: "plan-to-watch"})}
+            getData={fetchAnimeData}
             />
             <MyAnimeConatiner 
             title="Favorites" 
-            items={DUMMY_WATCHING.concat(DUMMY_COMPLETED, DUMMY_PLAN).filter(anime =>
-            DUMMY_ENTRIES.find(e => e.anilistId === anime.anilistId)?.isFavorite
-            )}
+            items={favorites}
             mode="row"
-            entries={DUMMY_ENTRIES}
+            entries={entries}
             onViewAll={() => setSearchParams({tab: "favorites"})}
+            getData={fetchAnimeData}
             />
              </div>
         )
@@ -66,10 +97,11 @@ export const MyAnime = () => {
             <div>
                 <MyAnimeConatiner 
                 title="Watching" 
-                items={DUMMY_WATCHING} 
+                items={watching} 
                 mode="grid"
-                entries={DUMMY_ENTRIES}
+                entries={entries}
                 onViewAll={() => setSearchParams({tab: "watching"})}
+                getData={fetchAnimeData}
                 />
             </div>
         )
@@ -79,10 +111,11 @@ export const MyAnime = () => {
             <div>
                 <MyAnimeConatiner 
                 title="Completed"   
-                items={DUMMY_COMPLETED} 
+                items={completed} 
                 mode="grid"
-                entries={DUMMY_ENTRIES}
+                entries={entries}
                 onViewAll={() => setSearchParams({tab: "completed"})}
+                getData={fetchAnimeData}
                 />
             </div>
         )
@@ -92,10 +125,11 @@ export const MyAnime = () => {
             <div>
                 <MyAnimeConatiner 
                 title="Plan to Watch" 
-                items={DUMMY_PLAN} 
+                items={planToWatch} 
                 mode="grid"
-                entries={DUMMY_ENTRIES}
+                entries={entries}
                 onViewAll={() => setSearchParams({tab: "plan-to-watch"})}
+                getData={fetchAnimeData}
                 />
             </div>
         )
@@ -105,12 +139,11 @@ export const MyAnime = () => {
             <div>
                 <MyAnimeConatiner 
                 title="Favorites" 
-                items={DUMMY_WATCHING.concat(DUMMY_COMPLETED, DUMMY_PLAN).filter(anime =>
-                DUMMY_ENTRIES.find(e => e.anilistId === anime.anilistId)?.isFavorite
-                )}
+                items={favorites}
                 mode="grid"
-                entries={DUMMY_ENTRIES}
+                entries={entries}
                 onViewAll={() => setSearchParams({tab: "favorites"})}
+                getData={fetchAnimeData}
             />
             </div>
         )

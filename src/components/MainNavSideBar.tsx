@@ -107,7 +107,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "home", label: "Home", icon: <HomeIcon /> },
   { id: "browse", label: "Browse", icon: <BrowseIcon /> },
   { id: "my-anime", label: "My Anime", icon: <MyAnimeIcon /> },
-  { id: "lists", label: "Lists", icon: <ListsIcon /> },
+  { id: "my-lists", label: "Lists", icon: <ListsIcon /> },
   { id: "calendar", label: "Calendar", icon: <CalendarIcon /> },
   { id: "following", label: "Following", icon: <FollowingIcon /> },
   { id: "notifications", label: "Notifications", icon: <NotificationsIcon /> },

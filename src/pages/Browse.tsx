@@ -8,6 +8,7 @@ import { getHiddenGems } from "../services/animeGroupService";
 import { getAnimebySearch } from "../services/animeService";
 import { AnimeCard } from "../components/AnimeCard";
 
+
 const genres = [
     "All",
     "Action",

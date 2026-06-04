@@ -50,6 +50,7 @@ export const signUp = async (
     if (favorites.length > 0) {
         const animeRows = favorites.map((anime) => ({
             anilist_id: anime.anilistId,
+            mal_id: anime.idMal,
             title_english: anime.title.english,
             title_romaji: anime.title.romaji,
             cover_large: anime.coverImage.large,

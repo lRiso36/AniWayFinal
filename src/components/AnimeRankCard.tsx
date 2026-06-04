@@ -7,7 +7,7 @@ type AnimeRankCardType = {
     image: string;
 };
 
-export const AnimeRankCard = ({id, rank, title, score, image}: AnimeRankCardType) => {
+export const AnimeRankCard = ({rank, title, score, image}: AnimeRankCardType) => {
     return (
         // main container
         <div className="

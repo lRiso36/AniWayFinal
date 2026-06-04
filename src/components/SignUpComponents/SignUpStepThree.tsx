@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
 import { AnimeSearch } from "./SignUpSearch";
-import { SignUpAnimeCard } from "./SignUpAnimeCard";
 import type { AnimeType } from "../../types/AnimeType";
 
 type SignUpStepThreeType = {

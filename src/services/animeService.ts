@@ -26,3 +26,31 @@ export const getAnimeById = async (id:number) => {
     return null;
 }
 }
+
+export const getAnimebySearch = async (query: string) => {
+    const { data: {session}} = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    const options = {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            query: query,
+        })
+    }
+    try {
+        const response = await fetch(`${API_URL}/anime/search`, options);
+        if (!response.ok) {
+            return [];
+        }
+
+        const data = await response.json();
+        return data.results;
+        } catch (err) {
+        console.error(err);
+        return [];
+    }
+}

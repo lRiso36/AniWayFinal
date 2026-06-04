@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState} from "react";
 import type { AnimeType } from "../types/AnimeType";
 import {useNavigate} from "react-router-dom"
 import { SignUpStepOne } from "../components/SignUpComponents/SignUpStepOne";

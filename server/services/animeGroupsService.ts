@@ -3,6 +3,7 @@ import supabase from '../supabase';
 
 type AnimeType = {
     anilistId: number
+    idMal: number | null
     title: {
         english: string | null
         romaji: string
@@ -42,6 +43,7 @@ const TRENDING_QUERY = `
         Page(perPage: 25) {
             media(type: ANIME, sort: TRENDING_DESC) {
                 id
+                idMal
                 title {
                     english
                     romaji
@@ -67,6 +69,7 @@ const TOP_RATED_QUERY = `
         Page(perPage: 25) {
             media(type: ANIME, sort: SCORE_DESC) {
                 id
+                idMal
                 title {
                     english
                     romaji
@@ -89,8 +92,9 @@ const TOP_RATED_QUERY = `
 const TRENDING_MOVIES_QUERY = `
     query {
         Page(perPage: 30) {
-            media(type: ANIME, format: MOVIE sort: TRENDING_DESC) {
+            media(type: ANIME, format: MOVIE, sort: TRENDING_DESC) {
                 id
+                idMal
                 title {
                     english
                     romaji
@@ -116,6 +120,7 @@ const HIDDEN_GEMS_QUERY = `
         Page(perPage: 50) {
             media(type: ANIME, averageScore_greater: 80, popularity_lesser: 30000, sort: SCORE_DESC) {
                 id
+                idMal
                 title {
                     english
                     romaji
@@ -177,6 +182,7 @@ export const getTrending = async () => {
 
             return animeData.map((anime:any) => ({
                 anilistId: anime.anilist_id,
+                idMal: anime.mal_id,
                 title: {
                     english: anime.title_english,
                     romaji: anime.title_romaji,
@@ -216,6 +222,7 @@ export const getTrending = async () => {
 
        const results: AnimeType[] = data.data.Page.media.map((anime: any) => ({
             anilistId: anime.id,
+            idMal: anime.idMal,
             title: {
                 english: anime.title.english,
                 romaji: anime.title.romaji,
@@ -234,6 +241,7 @@ export const getTrending = async () => {
         //insert all new animes to anime table
         const toInsertAnimes = results.map(anime => ({
             anilist_id: anime.anilistId,
+            mal_id: anime.idMal,
             title_english: anime.title.english,
             title_romaji: anime.title.romaji,
             cover_large: anime.coverImage.large,
@@ -334,6 +342,7 @@ export const getTopRated = async () => {
 
             return animeData.map((anime:any) => ({
                 anilistId: anime.anilist_id,
+                idMal:anime.mal_id,
                 title: {
                     english: anime.title_english,
                     romaji: anime.title_romaji,
@@ -373,6 +382,7 @@ export const getTopRated = async () => {
 
        const results: AnimeType[] = data.data.Page.media.map((anime: any) => ({
             anilistId: anime.id,
+            idMal: anime.idMal,
             title: {
                 english: anime.title.english,
                 romaji: anime.title.romaji,
@@ -391,6 +401,7 @@ export const getTopRated = async () => {
         //insert all new animes to anime table
         const toInsertAnimes = results.map(anime => ({
             anilist_id: anime.anilistId,
+            mal_id: anime.idMal,
             title_english: anime.title.english,
             title_romaji: anime.title.romaji,
             cover_large: anime.coverImage.large,
@@ -490,6 +501,7 @@ export const getTrendingMovies = async () => {
 
             return animeData.map((anime:any) => ({
                 anilistId: anime.anilist_id,
+                idMal: anime.mal_id,
                 title: {
                     english: anime.title_english,
                     romaji: anime.title_romaji,
@@ -529,6 +541,7 @@ export const getTrendingMovies = async () => {
 
        const results: AnimeType[] = data.data.Page.media.map((anime: any) => ({
             anilistId: anime.id,
+            idMal:anime.idMal,
             title: {
                 english: anime.title.english,
                 romaji: anime.title.romaji,
@@ -547,6 +560,7 @@ export const getTrendingMovies = async () => {
         //insert all new animes to anime table
         const toInsertAnimes = results.map(anime => ({
             anilist_id: anime.anilistId,
+            mal_id: anime.idMal,
             title_english: anime.title.english,
             title_romaji: anime.title.romaji,
             cover_large: anime.coverImage.large,
@@ -647,6 +661,7 @@ export const getHiddenGems = async () => {
 
             return animeData.map((anime:any) => ({
                 anilistId: anime.anilist_id,
+                idMal: anime.mal_id,
                 title: {
                     english: anime.title_english,
                     romaji: anime.title_romaji,
@@ -688,6 +703,7 @@ export const getHiddenGems = async () => {
 
        const results: AnimeType[] = data.data.Page.media.map((anime: any) => ({
             anilistId: anime.id,
+            idMal: anime.idMal,
             title: {
                 english: anime.title.english,
                 romaji: anime.title.romaji,
@@ -710,6 +726,7 @@ export const getHiddenGems = async () => {
         //insert all new animes to anime table
         const toInsertAnimes = selectedResults.map(anime => ({
             anilist_id: anime.anilistId,
+            mal_id: anime.idMal,
             title_english: anime.title.english,
             title_romaji: anime.title.romaji,
             cover_large: anime.coverImage.large,

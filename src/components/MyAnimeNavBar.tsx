@@ -1,10 +1,4 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-
-type MyAnimeNavItem = {
-    id: string;
-    label:string;
-}
 
 type MyAnimeNavBar = {
     selected?: string;

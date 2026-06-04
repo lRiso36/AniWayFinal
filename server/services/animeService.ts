@@ -3,6 +3,7 @@ import supabase from '../supabase';
 
 type AnimeType = {
     anilistId: number
+    idMal: number | null
     title: {
         english: string | null
         romaji: string
@@ -42,6 +43,7 @@ const SEARCH_QUERY = `
         Page(perPage: 20) {
             media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
                 id
+                idMal
                 title {
                     english
                     romaji
@@ -65,6 +67,7 @@ const ANIME_DETAIL_QUERY = `
     query ($id: Int) {
     Media(id: $id, type: ANIME) {
         id
+        idMal
         title {
             english
             romaji
@@ -158,9 +161,9 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
 
                 if (genreError) throw genreError;
 
-
-                return animeData.map((anime:any) => ({
+                const results =  animeData.map((anime:any) => ({
                 anilistId: anime.anilist_id,
+                idMal: anime.mal_id,
                 title: {
                     english: anime.title_english,
                     romaji: anime.title_romaji,
@@ -176,6 +179,7 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
                 description: anime.description,
                 }))
 
+                return results;
             } /// end of animeData if
         } //end of cachedAnime if
     } // end of cachedSearch if
@@ -200,7 +204,8 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
         }
 
         const results: AnimeType[] = data.data.Page.media.map((anime: any) => ({
-            anilistId: anime.id,
+        anilistId: anime.id,
+        idMal: anime.idMal,
         title: {
             english: anime.title.english,
             romaji: anime.title.romaji,
@@ -219,6 +224,7 @@ export const searchAnime = async (query: string): Promise<AnimeType[]> => {
         //insert all new animes to anime table
         const toInsertAnimes = results.map(anime => ({
             anilist_id: anime.anilistId,
+            mal_id: anime.idMal,
             title_english: anime.title.english,
             title_romaji: anime.title.romaji,
             cover_large: anime.coverImage.large,
@@ -363,6 +369,7 @@ export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> =
 
             return {
                 anilistId: cachedAnimeData.anilist_id,
+                idMal: cachedAnimeData.mal_id,
                 title: {
                     english: cachedAnimeData.title_english,
                     romaji: cachedAnimeData.title_romaji,
@@ -404,6 +411,7 @@ export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> =
 
         const result: AnimeDetailType = {
             anilistId: anime.id,
+            idMal: anime.idMal,
             title: {
                 english: anime.title.english,
                 romaji: anime.title.romaji,
@@ -436,6 +444,7 @@ export const getAnimeById = async (id:number): Promise<AnimeDetailType | null> =
 
         const toInsertAnime = {
             anilist_id: result.anilistId,
+            mal_id: anime.idMal,
             title_english: result.title.english,
             title_romaji: result.title.romaji,
             cover_large: result.coverImage.large,

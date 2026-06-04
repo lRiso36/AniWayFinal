@@ -14,9 +14,11 @@ export const MyLists = () => {
         setLists(data);
     }
     useEffect(() => {
+        setSearchParams("");
         fetchUserListData();
     },[]);
     // eventually fetch lists
+
     return (
         <div className="min-h-screen bg-[#0a0a14] ">
                 <div className="

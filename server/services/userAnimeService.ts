@@ -12,6 +12,7 @@ export const getUserAnimes = async(
     .select(`*,
         anime (
             anilist_id,
+            mal_id,
             title_english,
             title_romaji,
             cover_large,
@@ -39,6 +40,7 @@ export const getUserAnimes = async(
         },
         anime: {
             anilistId: row.anime.anilist_id,
+            idMal: row.anime.mal_id,
             title: {
                 english: row.anime.title_english,
                 romaji: row.anime.title_romaji,
@@ -103,7 +105,7 @@ export const toggleIsFavorite = async (userId: string, anilistId:number, episode
             status: 'completed',
             is_favorite: true,
             current_episode: episodes ?? 0
-        }, {onConflict: 'user_id, anilist_id'})
+        }, {onConflict: 'user_id,anilist_id'})
         
         if (upsertError) throw upsertError;
         return;

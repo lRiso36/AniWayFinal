@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect} from "react";
 import type { AnimeType } from "../../types/AnimeType";
 import { AnimeCard } from "../AnimeCard";
 import type { UserAnimeEntry } from "../../types/UserAnimeEntry";

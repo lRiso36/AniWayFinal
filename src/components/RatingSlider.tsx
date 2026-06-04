@@ -1,4 +1,3 @@
-import { useState } from "react";
 
 type RatingSliderType = {
     value: number | null;

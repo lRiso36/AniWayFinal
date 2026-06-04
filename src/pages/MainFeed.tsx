@@ -1,4 +1,4 @@
-import { MainNavSideBar } from "../components/MainNavSideBar"
+// import { MainNavSideBar } from "../components/MainNavSideBar"
 
 export const MainFeed = () => {
 

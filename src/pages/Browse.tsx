@@ -5,6 +5,8 @@ import { BrowseRow } from "../components/BrowseComponents/BrowseRow";
 import type { UserAnimeEntry } from "../types/UserAnimeEntry";
 import { getUserAnime } from "../services/userAnimeService";
 import { getHiddenGems } from "../services/animeGroupService";
+import { getAnimebySearch } from "../services/animeService";
+import { AnimeCard } from "../components/AnimeCard";
 
 const genres = [
     "All",
@@ -38,6 +40,7 @@ export const Browse = () => {
     const [hiddenGems, setHiddenGems] = useState<AnimeType[]>([]);
     const [loading, setLoading] = useState(true);
     const [animeEntryList, setAnimeEntryList] = useState<{entry: UserAnimeEntry, anime: AnimeType}[]>([]);
+    const [searchResults, setSearchResults] = useState<AnimeType[]>([]);
     
     const fetchData = async () => {
         setLoading(true)
@@ -59,6 +62,19 @@ export const Browse = () => {
     useEffect(() => {
         fetchData();
     }, [])
+
+    useEffect(() => {
+    if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+    }
+    const timer = setTimeout(async () => {
+        const results = await getAnimebySearch(searchQuery);
+        setSearchResults(results);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+    }, [searchQuery])
 
     const entries = animeEntryList.map(item => item.entry);
 
@@ -144,10 +160,26 @@ export const Browse = () => {
                         ))}
                     </div>
                 </div>
-                <BrowseRow title="Trending Now" items={trendingAnime} entries={entries} getData={() => fetchData()}/>
-                <BrowseRow title="Top Rated" items={topRatedAnime} entries={entries} getData={() => fetchData()}/>
-                <BrowseRow title="Movies" items={trendingMovies} entries={entries} getData={() => fetchData()}/>
-                <BrowseRow title="Hidden Gems" items={hiddenGems} entries={entries} getData={() => fetchData()}/>
+                {searchQuery.trim() ? (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                        {searchResults.map((anime) => (
+                            <div key={anime.anilistId} className="w-full">
+                                <AnimeCard
+                                anime={anime}
+                                entry={entries.find(e => e.anilistId === anime.anilistId)}
+                                getData={() => fetchData()}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <>
+                        <BrowseRow title="Trending Now" items={trendingAnime} entries={entries} getData={() => fetchData()}/>
+                        <BrowseRow title="Top Rated" items={topRatedAnime} entries={entries} getData={() => fetchData()}/>
+                        <BrowseRow title="Movies" items={trendingMovies} entries={entries} getData={() => fetchData()}/>
+                        <BrowseRow title="Hidden Gems" items={hiddenGems} entries={entries} getData={() => fetchData()}/>
+                    </>
+                    )}
             </div>
         </div>
     )

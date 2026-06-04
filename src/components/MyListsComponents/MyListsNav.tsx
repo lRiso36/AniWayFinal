@@ -1,10 +1,4 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-
-type MyListsNavItem = {
-    id: string;
-    label:string;
-}
 
 type MyListsNavBar = {
     selected?: string;

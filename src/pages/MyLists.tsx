@@ -1,7 +1,7 @@
 import { MyListsNavBar } from "../components/MyListsComponents/MyListsNav";
 import { useSearchParams } from "react-router-dom"
 import { ListsContainer } from "../components/MyListsComponents/ListContainer";
-import type { ListDetailType, ListType } from "../types/ListType";
+import type { ListType } from "../types/ListType";
 import { useState, useEffect } from "react";
 import { getLikedLists, getUserLists } from "../services/userListsService";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
@@ -9,11 +9,10 @@ import { useAuth } from "../context/Authcontext";
 
 export const MyLists = () => {
     const { user } = useAuth();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const tab = searchParams.get("tab") || "all-lists";
     const [lists, setLists] = useState<ListType[]>([]);
     const [likedLists, setLikedLists] = useState<ListType[]>([]);
-    const [listEntry, setListEntry] = useState<ListDetailType | undefined>(undefined);
     const [createActive, setCreateActive ] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -47,7 +46,6 @@ export const MyLists = () => {
     }
     
     const ownedByMe = lists.filter(list => list.userId === user?.id)
-    const allLists = [...lists, ...likedLists];
 
     if (loading) return (
     <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
@@ -121,7 +119,6 @@ export const MyLists = () => {
             <CreateListModal
             isOpen={createActive}
             onClose={() => setCreateActive(false)}
-            currentInfo={listEntry}
             onSave={() => 
                 saveData()
             }

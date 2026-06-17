@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, act } from "react";
+import { useState, useEffect, useRef} from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import type { AnimeDetailType } from "../types/AnimeDetailType";
 import { getAnimeById } from "../services/animeService";
@@ -29,9 +29,6 @@ export const AnimeDetail = () => {
     const [episodeData, setEpisodeData] = useState<EpisodeType[]>([]);
     const [episodeLoading, setEpisodeLoading] = useState(true);
     const [activeModal, setActiveModal] = useState<'log' | 'remove' | 'rate-review'| 'list' | 'create-list' | null>(null);
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [openLeft, setOpenLeft] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
     const [showToast, setShowToast] = useState(false);
     const canRemove = entry ? true : false;
 
@@ -103,14 +100,6 @@ export const AnimeDetail = () => {
     }, [])
 
     //get 
-    useEffect(() => {
-        const handleCLick = (e: MouseEvent) => {
-        if (menuRef.current && !menuRef.current.contains(e.target as Node)){
-            setMenuOpen(false);
-        }};
-        document.addEventListener("mousedown", handleCLick);
-        return () => document.removeEventListener("mousedown", handleCLick);
-    }, [])
 
     useEffect(() => {
         if (tab === 'episodes' && episodeData.length === 0 && id) {

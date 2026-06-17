@@ -1,4 +1,4 @@
-import type { PostUser, PostType } from "../../types/PostType"
+import type { PostType } from "../../types/PostType"
 import { likePost, unlikePost } from "../../services/postService"
 import { useAuth } from "../../context/Authcontext"
 import { useState } from "react"
@@ -14,7 +14,7 @@ type PostCardType = {
 
 export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
     const navigate = useNavigate();
-    const { user, username } = useAuth();
+    const { username } = useAuth();
     const [liked, setLiked] = useState(post.isLiked)
     const [likeCount, setLikeCount] = useState(post.likeCount)
     const [menuOpen, setMenuOpen] = useState(false);

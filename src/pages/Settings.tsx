@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Authcontext";
-import supabase from "../supabase";
 import { checkEmailAvailable, updatePassword, updateEmail } from "../services/authServices";
 
 export const Settings = () => {

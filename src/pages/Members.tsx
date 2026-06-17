@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { searchUsers } from "../services/followService";
 
@@ -18,7 +18,7 @@ export const Members = () => {
     const [loading, setLoading] = useState(false);
     const [recents, setRecents] = useState<SearchUser[]>([]);
     const navigate = useNavigate();
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    
 
     useEffect(() => {
         const stored = localStorage.getItem(RECENTS_KEY);

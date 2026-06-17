@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import type { ListDetailType } from "../types/ListType";
 import { getListById } from "../services/userListsService";
 import { useAuth } from "../context/Authcontext";
@@ -10,7 +10,6 @@ import { useListLike } from "../components/MyListsComponents/useListLike";
 export const ListDetail = () => {
     const { listId } = useParams();
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [list, setList] = useState<ListDetailType | null>(null);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);

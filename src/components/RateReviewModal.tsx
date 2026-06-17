@@ -19,7 +19,6 @@ export const RateReviewModal = ({isOpen, onClose, anime, currentEntry, onSave, o
     const [review, setReview] = useState('');
     const [shareToFeed, setShareToFeed] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [posted, setPosted] = useState(false);
     const [hasSubmitted, setHasSubmitted] = useState(false);
 
     const canSubmit = review.trim().length > 0 || score;
@@ -134,9 +133,6 @@ export const RateReviewModal = ({isOpen, onClose, anime, currentEntry, onSave, o
                     </div>
                     Share to feed
                 </button>
-                {posted && (
-                    <p className="text-purple-400 text-xs text-center">Posted to feed ✓</p>
-                )}
                 {hasSubmitted && !canSubmit && (
                     <p className="text-red-400 text-xs">You must fill out at least one field</p>
                 )}

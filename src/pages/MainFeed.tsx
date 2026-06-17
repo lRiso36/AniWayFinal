@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { getFeed, deletePost } from "../services/postService"
 import { PostCard } from "../components/PostComponents/postCard"
-import type { PostType } from "../types/PostType"
 import { CreatePostModal } from "../components/PostComponents/CreatePostModal"
 import { useAuth } from "../context/Authcontext"
 

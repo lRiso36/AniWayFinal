@@ -7,7 +7,7 @@ import { getUserAnime } from "../services/userAnimeService";
 import { getAnimebySearch } from "../services/animeService";
 import { AnimeCard } from "../components/AnimeCard";
 import { getAnimeByGenre } from "../services/animeGenreService";
-import type { User } from "@supabase/supabase-js";
+
 
 const genres = [
     "All",

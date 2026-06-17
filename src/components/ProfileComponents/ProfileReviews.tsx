@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import type { ReviewType } from "../../types/ReviewType";
-import { useAuth } from "../../context/Authcontext";
 import { getUserReviews } from "../../services/reviewService";
 import { useNavigate } from "react-router-dom";
 

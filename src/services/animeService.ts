@@ -37,12 +37,9 @@ export const getAnimebySearch = async (query: string) => {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            query: query,
-        })
     }
     try {
-        const response = await fetch(`${API_URL}/anime/search`, options);
+        const response = await fetch(`${API_URL}/anime/search?search=${encodeURIComponent(query)}`, options);
         if (!response.ok) {
             return [];
         }

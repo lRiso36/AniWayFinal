@@ -7,10 +7,10 @@ type BrowseRowType = {
     title: string;
     items: AnimeType[];
     entries?: UserAnimeEntry[]
-    getData: () => Promise<void>
+    onEntryChange: (updated: UserAnimeEntry | null, anilistId: number) => void;
 }
 
-export const BrowseRow = ({ title, items, entries, getData}: BrowseRowType) => {
+export const BrowseRow = ({ title, items, entries, onEntryChange}: BrowseRowType) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const tripled = [...items, ...items, ...items];
 
@@ -72,7 +72,7 @@ export const BrowseRow = ({ title, items, entries, getData}: BrowseRowType) => {
                         <AnimeCard
                         anime={anime}
                         entry={entries?.find(e => e.anilistId === anime.anilistId)}
-                        getData={() => getData()}
+                        onEntryChange={onEntryChange}
                         />
                         </div>
                     ))}

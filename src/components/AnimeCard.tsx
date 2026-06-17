@@ -6,11 +6,15 @@ import { LogModal } from "./LogModal";
 import { RemoveModal } from "./RemoveModal";
 import { toggleIsFavorite } from "../services/userAnimeService";
 import { useNavigate } from "react-router-dom";
+import { RateReviewModal } from "./RateReviewModal";
+import { AddToListModal } from "./AddToListsModal";
+import { CreateListModal } from "./MyListsComponents/CreateListModal";
 
 type AnimeCardType = {
   anime: AnimeType;
   entry?: UserAnimeEntry;
-  getData: () => Promise<void>;
+  readOnly?: boolean;
+  onEntryChange?: (updated: UserAnimeEntry | null, anilistId: number) => void;
   onStatusChange?: (anilistId: number, status: UserAnimeStatus) => void;
   onRate?: (anilistId: number) => void;
   onReview?: (anilistId: number) => void;
@@ -19,12 +23,24 @@ type AnimeCardType = {
   onRemove?: (anilistId: number) => void;
 };
 
-export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
+export const AnimeCard = ({ anime, entry, onEntryChange, readOnly=false }: AnimeCardType) => {
+  const MENU_ITEMS = [
+      { label: "📺 Log", id: "log" },
+      { label: "⭐ Rate & Review", id: "rate-review" },
+      { label:
+        entry?.isFavorite ? "❤️ Unfavorite" : " ❤️ Add to favorites", 
+        id: "favorite" 
+      },
+      { label: "📋 Add to List", id: "list" },
+    ];
+  const canRemove = entry ? true : false;
+  
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [openLeft, setOpenLeft] = useState(false);
-  const [activeModal, setActiveModal] = useState<'log' | 'favorite' | 'remove' | null>(null);
+  const [activeModal, setActiveModal] = useState<'log' | 'favorite' | 'remove' | 'rate-review' | 'list' | 'create-list' |null>(null);
   const navigate = useNavigate();
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const handleCLick = (e: MouseEvent) => {
@@ -36,11 +52,24 @@ export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
   }, [])
 
   const toggleFavorite = async () => {
+    const prev = entry ?? null;
+    const optimistic: UserAnimeEntry= entry
+    ? {...entry, isFavorite: !entry.isFavorite}
+    : { 
+      anilistId: anime.anilistId, 
+      status: 'completed', 
+      currentEpisode: anime.episodes ?? 0, 
+      score: null, 
+      isFavorite: true ,
+      startDate: null,
+      finishDate: null
+    };
+
+    onEntryChange?.(optimistic, anime.anilistId)
     try {
       await toggleIsFavorite(anime.anilistId, anime.episodes)
-      getData();
     } catch (error) {
-      console.error(error);
+      onEntryChange?.(prev, anime.anilistId)
     }
   }
 
@@ -56,6 +85,7 @@ export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
           className="w-full h-full object-cover"
           
         />
+        {!readOnly && (
         <div className="absolute top-1 right-1 z-20">
           
           <button
@@ -94,16 +124,21 @@ export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
             </svg>
             </button>
         </div>
+        )}
         <div className="absolute inset-0 
         border-2 border-purple-500 rounded-lg 
         opacity-0 group-hover:opacity-100 
         transition-opacity z-10" />
+            
         </div>
+        
         {/* image overflow hidden closed now */}
+              {!readOnly && (
               <AnimeCardMenu
               menuOpen={menuOpen}
               openLeft={openLeft}
-              entry={entry}
+              items={MENU_ITEMS}
+              canRemove={canRemove}
               onClose={() => setMenuOpen(false)}
               onSelect={(id) => {
                 if (id === 'log') setActiveModal('log');
@@ -111,11 +146,14 @@ export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
                    toggleFavorite();
                 };
                 if (id === 'remove') setActiveModal('remove');
+                if (id === 'rate-review') setActiveModal('rate-review');
+                if (id === 'list') setActiveModal('list');
               }}
               />
+            )}
       {/* title and episode info */}
       <div>
-        <p className="-mt-1 ml-1 text-white text-xs sm:text-sm lg:text-base font-medium line-clamp-1">
+        <p className="-mt-1 ml-1 text-white text-xs lg:text-base font-medium line-clamp-1">
           {anime.title.english ?? anime.title.romaji}
         </p>
         <p className="ml-1 text-white/50 text-xs">
@@ -131,15 +169,17 @@ export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
         style={{ width: `${Math.round((entry.currentEpisode / anime.episodes) * 100)}%` }}
         />
         </div>
-)}
+)} 
+        {!readOnly && (
+        <>
         <LogModal
         isOpen={activeModal === 'log'}
         onClose={() => setActiveModal(null)}
         anime={anime}
         currentEntry={entry}
-        onSave={() => {
+        onSave={(updated) => {
           setActiveModal(null);
-          getData();
+          onEntryChange?.(updated, anime.anilistId)
         }}
         />
         <RemoveModal
@@ -149,9 +189,49 @@ export const AnimeCard = ({ anime, entry, getData }: AnimeCardType) => {
         currentEntry={entry}
         onSave={() => {
           setActiveModal(null);
-          getData();
+          onEntryChange?.(null, anime.anilistId)
         }}
         />
+        <RateReviewModal 
+        isOpen={activeModal === 'rate-review'}
+        onClose={() => setActiveModal(null)}
+        anime={anime}
+        currentEntry={entry}
+        onSave={(updated) => {
+          setActiveModal(null);
+          onEntryChange?.(updated, anime.anilistId)
+        }}
+        onPosted={() => {
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 2500);
+        }}
+        />
+        {activeModal === 'list' && (
+          <AddToListModal
+        isOpen={activeModal === 'list'}
+        onClose={() => setActiveModal(null)}
+        animeToAdd={anime}
+        onSave={() =>
+          setActiveModal(null)
+        }
+        onCreateList={() => setActiveModal('create-list')}
+        />
+        )}
+        {activeModal === 'create-list' && (
+          <CreateListModal
+          isOpen={activeModal === 'create-list'}
+          onClose={() => setActiveModal(null)}
+          initialAnime={anime}
+          onSave={() => setActiveModal(null)}
+          />
+        )}
+        </>
+      )}
+      {showToast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-purple-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg">
+          Posted to feed ✓
+          </div>
+        )}
     </div>
   );
 };

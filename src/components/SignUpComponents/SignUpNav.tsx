@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 type SignUpNavType = {
     preButton: string
     button: string
+    to: string
 }
-export const SignUpNav =  ({preButton, button}: SignUpNavType) => {
+export const SignUpNav =  ({preButton, button, to}: SignUpNavType) => {
     const navigate = useNavigate();
     function handleClick() {
-        navigate("/login")
+        navigate(to)
     }
     return (
     <nav className="

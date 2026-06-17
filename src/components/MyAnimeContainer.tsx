@@ -5,15 +5,16 @@ import { AnimeCard } from "./AnimeCard"
 type MyAnimeContainerType = {
     title: string;
     items: AnimeType[];   
+    readOnly?: boolean;
     onViewAll?: () => void;
     mode?: "row" | "grid";
     entries?: UserAnimeEntry[];
-    getData: () => Promise<void>;
+    onEntryChange?: (updated: UserAnimeEntry | null, anilistId: number) => void;
 }
 
 // PROGRESS WILL COME FROM DATABASE LATER
 
-export const MyAnimeConatiner = ({title, items, onViewAll, mode, entries, getData}: MyAnimeContainerType) => {
+export const MyAnimeConatiner = ({title, items, readOnly=false, onViewAll, mode, entries, onEntryChange}: MyAnimeContainerType) => {
 
     return (
         <div className="flex flex-col gap-4">
@@ -52,7 +53,8 @@ export const MyAnimeConatiner = ({title, items, onViewAll, mode, entries, getDat
                     <AnimeCard 
                     anime={anime} 
                     entry={entries?.find(e => e.anilistId === anime.anilistId)}
-                    getData={getData}
+                    onEntryChange={onEntryChange}
+                    readOnly={readOnly}
                     />
                 </div>
                 ))}

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { SignUpNav } from "../components/SignUpComponents/SignUpNav";
 import { useNavigate } from "react-router-dom";
 import { logIn } from "../services/authServices";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/Authcontext";
 
 export const Login = () => {
     const navigate = useNavigate();
@@ -9,15 +11,31 @@ export const Login = () => {
         email: "",
         password: "",
     });
+    const { user, loading } = useAuth();
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     async function handleSubmit() {
+        console.log('handleSubmit called');
         try {
-            await logIn(formData.email, formData.password);
+            console.log('calling logIn with:', formData.email);
+            const result = await logIn(formData.email, formData.password);
+            console.log('logIn result:', result);
             navigate("/home");
         } catch (error: any) {
-            console.error(error.message);
+            setError(error.message);
+            console.error(error);
         }
     }
+
+    // if already logged in, redirect to home
+    if (loading) return (
+        <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
+
+    if (user) return <Navigate to="/home" replace />;
 
     return (
         <main className="
@@ -33,8 +51,9 @@ export const Login = () => {
         ">
             <nav>
                 <SignUpNav
-                preButton="Don't have an account?"
-                button="Sign Up"
+                    preButton="Don't have an account?"
+                    button="Sign Up"
+                    to="/Signup"
                 />
             </nav>
 
@@ -108,13 +127,14 @@ export const Login = () => {
 
                         {/* Password */}
                         <div className="space-y-1">
-                            <label className="text-sm text-zinc-400">
-                                Password <span className="text-purple-500">*</span>
-                            </label>
-                            <input
-                                type="password"
-                                placeholder="Your password"
-                                className="
+                            <div className="relative">
+                                <label className="text-sm text-zinc-400">
+                                    Password <span className="text-purple-500">*</span>
+                                </label>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Your password"
+                                    className="
                                 w-full
                                 bg-zinc-900
                                 border
@@ -122,6 +142,8 @@ export const Login = () => {
                                 rounded-xl
                                 px-4
                                 py-3
+                                pr-10
+                                sm:pr-15
                                 mt-1
                                 text-white
                                 text-sm
@@ -131,15 +153,47 @@ export const Login = () => {
                                 focus:border-purple-500/60
                                 transition
                                 "
-                                value={formData.password}
-                                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                            />
-                            <p
-                                className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer mt-1 text-right"
-                                onClick={() => navigate("/forgot-password")}
-                            >
-                                Forgot password?
-                            </p>
+                                    value={formData.password}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="
+                                    absolute right-3 sm:right-5 
+                                    top-13 sm:top-13.5 -translate-y-1/2 
+                                    text-white/30 hover:text-white/60 
+                                    transition-colors"
+                                >
+                                    {showPassword ? (
+                                        <svg width="16" height="16" 
+                                        viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" strokeWidth="2"
+                                        className="sm:w-5 sm:h-5">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                                            <line x1="1" y1="1" x2="23" y2="23" />
+                                        </svg>
+                                    ) : (
+                                        <svg width="16" height="16" 
+                                        viewBox="0 0 24 24" fill="none" 
+                                        stroke="currentColor" strokeWidth="2"
+                                        className="sm:w-5 sm:h-5">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
+                            <div className="flex justify-between">
+                                {error ? <p className="ml-2 mt-1 text-red-400 text-xs ">{error}</p> : <span />}
+                                <p
+                                    className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer mt-1 text-right"
+                                    onClick={() => navigate("/forgot-password")}
+                                >
+                                    Forgot password?
+                                </p>
+                            </div>
                         </div>
 
                         {/* Submit */}

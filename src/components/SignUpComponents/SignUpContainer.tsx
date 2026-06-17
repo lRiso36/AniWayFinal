@@ -26,6 +26,7 @@ export const SignUpContainer = ({title, subtitle, step, children}: SignUpContain
                     <SignUpNav 
                     preButton="Already have an account?"
                     button="Log In"
+                    to="/Login"
                     />
                 </nav>
             </div>

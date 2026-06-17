@@ -24,6 +24,7 @@ export const SignUp = () => {
     });
     const [agreed, setAgreed] = useState(false);
     const [loading, setLoading] = useState(false);
+    
 
     // variable functions
     const nextStep = async () => {

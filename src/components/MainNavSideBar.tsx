@@ -1,5 +1,5 @@
 // NEED USERNAME AND IFNO AND STUFF FROM DATABASE
-
+import { useAuth } from "../context/Authcontext";
 import { useEffect, useState } from "react";
 
 type NavItem = {
@@ -11,8 +11,8 @@ type NavItem = {
 type MainNavSideBarType = {
   selected?: string;
   onSelect?: (id: string) => void;
-  userAvatar?: string;
-  userName?: string;
+  userAvatar: string | null;
+  userName: string;
 };
 
 // NAVBAR ICONS
@@ -108,21 +108,21 @@ const NAV_ITEMS: NavItem[] = [
   { id: "browse", label: "Browse", icon: <BrowseIcon /> },
   { id: "my-anime", label: "My Anime", icon: <MyAnimeIcon /> },
   { id: "my-lists", label: "Lists", icon: <ListsIcon /> },
-  { id: "calendar", label: "Calendar", icon: <CalendarIcon /> },
-  { id: "following", label: "Following", icon: <FollowingIcon /> },
-  { id: "notifications", label: "Notifications", icon: <NotificationsIcon /> },
-  { id: "messages", label: "Messages", icon: <MessagesIcon /> },
+  // { id: "calendar", label: "Calendar", icon: <CalendarIcon /> },
+  { id: "members", label: "Members", icon: <FollowingIcon /> },
+  // { id: "notifications", label: "Notifications", icon: <NotificationsIcon /> },
+  // { id: "messages", label: "Messages", icon: <MessagesIcon /> },
   { id: "profile", label: "Profile", icon: <ProfileIcon /> },
   { id: "settings", label: "Settings", icon: <SettingsIcon /> },
 ];
 
 
-export const MainNavSideBar = ({selected:externalSelected, onSelect, userName="kuroo"}:MainNavSideBarType) => {
+export const MainNavSideBar = ({selected:externalSelected, onSelect, userName, userAvatar}:MainNavSideBarType) => {
     // internal is for when no external is passed or interal is controlling it
     const [internalSelected, setInternalSelected] = useState("home")
     // if no external, set to internal 
     const selected = externalSelected ?? internalSelected;
-
+    const { username } = useAuth();
     // only true when screen is not large or greater, allows you to collapse window
     const [manualExpanded, setManualExpanded] = useState(false);
     const [isLarge, setIsLarge] = useState(window.innerWidth >= 1024);
@@ -184,7 +184,7 @@ export const MainNavSideBar = ({selected:externalSelected, onSelect, userName="k
                     bg-[#1e1e2e] text-white text-xs px-2 py-1 rounded
                     whitespace-nowrap pointer-events-none
                     opacity-0 group-hover:opacity-100
-                    transition-opacity duration-150 z-50">
+                    transition-opacity duration-150 z-[100]">
                     Expand
                     </div>
                 )}
@@ -228,7 +228,7 @@ export const MainNavSideBar = ({selected:externalSelected, onSelect, userName="k
                             bg-[#1e1e2e] text-white text-xs px-2 py-1 rounded
                             whitespace-nowrap pointer-events-none
                             opacity-0 group-hover:opacity-100
-                            transition-opacity duration-150 z-50">
+                            transition-opacity duration-150 z-[100]">
                             {item.label}
                             </div>
                             )}
@@ -253,29 +253,18 @@ export const MainNavSideBar = ({selected:externalSelected, onSelect, userName="k
                 overflow-hidden
                 "
                 >
-                <div className="
-                w-8 
-                h-8 
-                rounded-full 
-                bg-gradient-to-br 
-                from-purple-700 
-                to-indigo-600 
-                flex 
-                items-center 
-                justify-center 
-                text-white 
-                text-sm 
-                font-semibold 
-                shrink-0
-                ">
-                {userName}
-                </div>
+                <img 
+                src={userAvatar ?? undefined} 
+                alt={userName}
+                className="w-8 h-8 rounded-full object-cover shrink-0"
+                />
                 {/* ADD USERNAME INFO AND SHIT FROM DATABSE*/}
                 {expanded && (<div className="">
-                    <p className="text-white/85 text-[13px] font-medium">kuroo</p>
+                    <p className="text-white/85 text-[13px] font-medium truncate">{userName}</p>
                     <p className="text-white/35 text-[11px]">View profile</p>
-                </div>)}
-            </div>
+                </div>
+              )} 
+              </div>
     </nav>
     )
 }

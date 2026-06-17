@@ -75,6 +75,7 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
 
         const timer = setTimeout(async () => {
             const availableEmail = await checkEmailAvailable(email);
+            console.log('available', availableEmail)
             if (!availableEmail) {
                 setEmailError('Email already used for an account');
             } else {

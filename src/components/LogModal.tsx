@@ -9,7 +9,7 @@ type LogModalTypes = {
     onClose: () => void,
     anime: AnimeType,
     currentEntry?: UserAnimeEntry,
-    onSave: () => void
+    onSave: (updated: UserAnimeEntry) => void
 }
 
 export const LogModal = ({isOpen, onClose, currentEntry, anime, onSave}: LogModalTypes) => {
@@ -17,6 +17,24 @@ export const LogModal = ({isOpen, onClose, currentEntry, anime, onSave}: LogModa
     const [currentEpisode, setCurrentEpisode] = useState<number>(currentEntry?.currentEpisode ?? 0);
     const [score, setScore] = useState<number | null>(currentEntry?.score ?? null);
 
+    const handleSave = async () => {
+    try {
+        await logAnime(anime.anilistId, status, currentEpisode, anime.episodes, score);
+        onSave({
+            anilistId: anime.anilistId,
+            status,
+            currentEpisode,
+            score,
+            isFavorite: currentEntry?.isFavorite ?? false,
+            startDate: currentEntry?.startDate ?? null,
+            finishDate: currentEntry?.finishDate ?? null,
+        });
+    } catch (error){
+        console.error(error);
+    }
+}
+
+    
     const handleStatusChange = (newStatus: UserAnimeStatus) => {
         setStatus(newStatus);
         if (newStatus === 'completed') {
@@ -35,15 +53,6 @@ export const LogModal = ({isOpen, onClose, currentEntry, anime, onSave}: LogModa
             setStatus('completed');
         } else {
             setStatus('watching');
-        }
-    }
-
-    const handleSave = async () => {
-        try {
-            await logAnime(anime.anilistId, status, currentEpisode, anime.episodes, score);
-            onSave();
-        } catch (error){
-            console.error(error);
         }
     }
 

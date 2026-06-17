@@ -104,3 +104,30 @@ export const getHiddenGems = async () => {
     }
  
 }
+
+// export const getAwardWinning = async () => {
+//     const { data: {session}} = await supabase.auth.getSession();
+//     const token = session?.access_token;
+
+//     const options = {
+//         method: 'GET',
+//         headers: {
+//             'Authorization': `Bearer ${token}`
+//         }
+//     }
+
+//      try {
+//         const response = await fetch(`${API_URL}/browse/award-winning`, options);
+//         if (!response.ok) {
+//             return [];
+//         }
+
+//         const data = await response.json();
+//         return data.results;
+//     } catch (error) {
+//         console.error('failed award winning: ', error)
+//         console.error(error);
+//         return [];
+//     }
+ 
+// }

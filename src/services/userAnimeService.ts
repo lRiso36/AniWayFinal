@@ -33,6 +33,7 @@ export const logAnime = async (
     currentEpisode?: number,
     episodes?: number | null,
     score?: number | null,
+    review?: string | null,
 ) => {
     const { data: {session}} = await supabase.auth.getSession();
     const token = session?.access_token;
@@ -48,7 +49,8 @@ export const logAnime = async (
             status,
             currentEpisode,
             episodes,
-            score
+            score,
+            review
         })
     }
 
@@ -125,5 +127,46 @@ export const toggleIsFavorite = async (
     } catch (error) {
         console.error(error);
         throw error;
+    }
+}
+
+
+export const addReview = async (animeId: number, content: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    try {
+        const response = await fetch(`${API_URL}/user/rate-and-review/add`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ animeId, content })
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to add review');
+        }
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const getUserAnimeStatus = async (anilistId: number) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    try {
+        const response = await fetch(`${API_URL}/user/status/${anilistId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error(error);
+        return null;
     }
 }

@@ -18,6 +18,18 @@ export const MyAnime = () => {
     }
     const [loading, setLoading] = useState(true);
 
+    const handleEntryChange = (updated: UserAnimeEntry | null, anilistId: number) => {
+        setAnimeList(prev => {
+            if (updated === null) {
+                return prev.filter(item => item.entry.anilistId !== anilistId);
+            }
+            return prev.map(item =>
+                item.entry.anilistId === anilistId
+                    ? { ...item, entry: updated }
+                    : item
+            );
+        });
+    }
 
     useEffect(() => {
         fetchAnimeData();
@@ -63,7 +75,7 @@ export const MyAnime = () => {
             mode="row"
             entries={entries}
             onViewAll={() => setSearchParams({tab: "watching"})}
-            getData={fetchAnimeData}
+            onEntryChange={handleEntryChange}
             />
             <MyAnimeConatiner 
             title="Completed"   
@@ -71,7 +83,7 @@ export const MyAnime = () => {
             mode="row"
             entries={entries}
             onViewAll={() => setSearchParams({tab: "completed"})}
-            getData={fetchAnimeData}
+            onEntryChange={handleEntryChange}
             />
             <MyAnimeConatiner 
             title="Plan to Watch" 
@@ -79,7 +91,7 @@ export const MyAnime = () => {
             mode="row"
             entries={entries}
             onViewAll={() => setSearchParams({tab: "plan-to-watch"})}
-            getData={fetchAnimeData}
+            onEntryChange={handleEntryChange}
             />
             <MyAnimeConatiner 
             title="Favorites" 
@@ -87,7 +99,7 @@ export const MyAnime = () => {
             mode="row"
             entries={entries}
             onViewAll={() => setSearchParams({tab: "favorites"})}
-            getData={fetchAnimeData}
+            onEntryChange={handleEntryChange}
             />
              </div>
         )
@@ -101,7 +113,7 @@ export const MyAnime = () => {
                 mode="grid"
                 entries={entries}
                 onViewAll={() => setSearchParams({tab: "watching"})}
-                getData={fetchAnimeData}
+                onEntryChange={handleEntryChange}
                 />
             </div>
         )
@@ -115,7 +127,7 @@ export const MyAnime = () => {
                 mode="grid"
                 entries={entries}
                 onViewAll={() => setSearchParams({tab: "completed"})}
-                getData={fetchAnimeData}
+                onEntryChange={handleEntryChange}
                 />
             </div>
         )
@@ -129,7 +141,7 @@ export const MyAnime = () => {
                 mode="grid"
                 entries={entries}
                 onViewAll={() => setSearchParams({tab: "plan-to-watch"})}
-                getData={fetchAnimeData}
+                onEntryChange={handleEntryChange}
                 />
             </div>
         )
@@ -143,7 +155,7 @@ export const MyAnime = () => {
                 mode="grid"
                 entries={entries}
                 onViewAll={() => setSearchParams({tab: "favorites"})}
-                getData={fetchAnimeData}
+                onEntryChange={handleEntryChange}
             />
             </div>
         )

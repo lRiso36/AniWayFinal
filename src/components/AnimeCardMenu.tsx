@@ -1,8 +1,15 @@
 import type { UserAnimeEntry } from "../types/UserAnimeEntry";
 
+type MenuItem = {
+    label: string;
+    id: string;
+}
+
 type AnimeCardMenuType = {
     menuOpen: boolean;
     openLeft: boolean;
+    items: MenuItem[];
+    canRemove: boolean;
     entry?: UserAnimeEntry
     onClose: () => void;
     onSelect: (id:string) => void;
@@ -10,16 +17,9 @@ type AnimeCardMenuType = {
 
 
 
-export const AnimeCardMenu = ({ menuOpen, openLeft, entry, onClose, onSelect }: AnimeCardMenuType) => {
-    const MENU_ITEMS = [
-      { label: "📺 Log", id: "log" },
-      { label: "⭐ Rate & Review", id: "rate-review" },
-      { label:
-        entry?.isFavorite ? "❤️ Unfavorite" : " ❤️ Add to favorites", 
-        id: "favorite" 
-      },
-      { label: "📋 Add to List", id: "list" },
-    ];
+export const AnimeCardMenu = ({ 
+  menuOpen, openLeft, items, canRemove, onClose, onSelect 
+}: AnimeCardMenuType) => {
   
     if (!menuOpen) return null;
 
@@ -31,7 +31,7 @@ export const AnimeCardMenu = ({ menuOpen, openLeft, entry, onClose, onSelect }: 
               bg-[#1e1e2e] border border-white/10 
               rounded-xl shadow-xl w-48 
               py-1 z-50`}>
-                {MENU_ITEMS.map((item) => (
+                {items.map((item) => (
                   <button
                   key={item.id}
                   className="
@@ -41,14 +41,18 @@ export const AnimeCardMenu = ({ menuOpen, openLeft, entry, onClose, onSelect }: 
                   onClick={() => {onSelect(item.id); onClose(); }}
                   > {item.label}</button>
                 ))}
-                <div className="border-t border-white/10 my-1" />
-                  <button 
-                  className="w-full text-left px-4 py-1.5 
-                  text-sm text-red-400 hover:bg-white/5 transition-colors"
-                  onClick={() => {onSelect("remove"); onClose();}}
-                  >
-                  🗑️ Remove
-                  </button>
-              </div>
+              {canRemove && (
+              <>
+              <div className="border-t border-white/10 my-1" />
+                <button 
+                className="w-full text-left px-4 py-1.5 
+                text-sm text-red-400 hover:bg-white/5 transition-colors"
+                onClick={() => {onSelect("remove"); onClose();}}
+                >
+                🗑️ Remove
+                </button>
+              </>
+              )}
+            </div>
     )
 }

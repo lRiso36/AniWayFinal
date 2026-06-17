@@ -1,6 +1,7 @@
 export type AnimeType = {
     anilistId: number
     idMal: number | null
+    averageScore: number | null
     title: {
         english: string | null
         romaji: string

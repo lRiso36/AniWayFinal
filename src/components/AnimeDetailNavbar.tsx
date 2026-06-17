@@ -1,18 +1,21 @@
 import { useSearchParams } from "react-router-dom";
 
 const ANIME_DETAIL_NAV_ITEMS = [
-    { id: "overview", label: "Overview" },
+    { id: "details", label: "Details" },
     { id: "episodes", label: "Episodes" },
-    { id: "characters", label: "Characters" },
+    { id: "characters-and-cast", label: "Characters and Cast" },
     { id: "reviews", label: "Reviews" },
 ]
 
 export const AnimeDetailNavBar = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const selected = searchParams.get("tab") || "overview";
+    const selected = searchParams.get("tab") || "details";
 
     const handleSelect = (id: string) => {
-        setSearchParams({ tab: id });
+        setSearchParams(
+            { tab: id },
+            {replace: true},
+        );
     };
 
     return (

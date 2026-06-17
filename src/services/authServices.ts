@@ -112,3 +112,27 @@ export const checkEmailAvailable = async (email:string) => {
     return !data;
 }
 
+export const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+}
+
+export const updateEmail = async (userId: string, newEmail: string) => {
+    const { error: authError } = await supabase.auth.updateUser({ email: newEmail });
+    if (authError) throw authError;
+
+    const { error: dbError } = await supabase
+        .from('users')
+        .update({ email: newEmail })
+        .eq('id', userId);
+
+    if (dbError) throw dbError;
+}
+
+export const forgotPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+    });
+    console.log('forgotPassword result:', error);
+    if (error) throw error;
+}

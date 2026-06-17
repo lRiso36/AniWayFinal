@@ -1,27 +1,22 @@
 import { useState, useEffect } from "react";
-import { getTopRatedAnime, getTrendingAnime, getTrendingMovies } from "../services/animeGroupService";
+import { getTopRatedAnime, getTrendingAnime, getTrendingMovies, getHiddenGems } from "../services/animeGroupService";
 import type { AnimeType } from "../types/AnimeType";
 import { BrowseRow } from "../components/BrowseComponents/BrowseRow";
 import type { UserAnimeEntry } from "../types/UserAnimeEntry";
 import { getUserAnime } from "../services/userAnimeService";
-import { getHiddenGems } from "../services/animeGroupService";
 import { getAnimebySearch } from "../services/animeService";
 import { AnimeCard } from "../components/AnimeCard";
-
+import { getAnimeByGenre } from "../services/animeGenreService";
+import type { User } from "@supabase/supabase-js";
 
 const genres = [
     "All",
     "Action",
     "Adventure",
-    "Avant Garde",
-    "Award Winning",
-    "Boys Love",
     "Comedy",
     "Drama",
     "Ecchi",
     "Fantasy",
-    "Girls Love",
-    "Gourmet",
     "Horror",
     "Mystery",
     "Romance",
@@ -29,7 +24,6 @@ const genres = [
     "Slice of Life",
     "Sports",
     "Supernatural",
-    "Suspense"
 ]
 
 export const Browse = () => {
@@ -42,7 +36,40 @@ export const Browse = () => {
     const [loading, setLoading] = useState(true);
     const [animeEntryList, setAnimeEntryList] = useState<{entry: UserAnimeEntry, anime: AnimeType}[]>([]);
     const [searchResults, setSearchResults] = useState<AnimeType[]>([]);
-    
+    const [genreResults, setGenreResults] = useState<AnimeType[]>([]);
+    const [genreLoading, setGenreLoading] = useState(true);
+
+
+    const updateEntry = (updated: UserAnimeEntry | null, anilistId: number) => {
+        setAnimeEntryList( current => {
+            // remove
+            if (updated === null) {
+                return current.filter( item => item.entry.anilistId !== anilistId)
+            }
+
+            // update existing
+            if (current.find(item => item.entry.anilistId === anilistId)) {
+                return current.map(item => 
+                    item.entry.anilistId === anilistId
+                    ? {entry: updated, anime: item.anime}
+                    : item
+                )
+            }
+
+            //new entry if anime was in list before
+             const animeData =
+                trendingAnime.find(a => a.anilistId === anilistId) ||
+                topRatedAnime.find(a => a.anilistId === anilistId) ||
+                trendingMovies.find(a => a.anilistId === anilistId) ||
+                hiddenGems.find(a => a.anilistId === anilistId) ||
+                searchResults.find(a => a.anilistId === anilistId) ||
+                genreResults.find(a => a.anilistId === anilistId);
+            
+                if (!animeData) return current;
+
+            return [...current, {entry: updated, anime: animeData}]
+        })
+    }
     const fetchData = async () => {
         setLoading(true)
         const [trending, topRated, movies, gems, userAnime] = await Promise.all([
@@ -60,6 +87,13 @@ export const Browse = () => {
             setLoading(false);
     }
 
+    const fetchGenreAnime = async (genre: string) => {
+        setGenreLoading(true)
+        const genreAnimes = await getAnimeByGenre(genre);
+        setGenreResults(genreAnimes);
+        setGenreLoading(false)
+    }
+
     useEffect(() => {
         fetchData();
     }, [])
@@ -69,6 +103,8 @@ export const Browse = () => {
         setSearchResults([]);
         return;
     }
+
+   
     const timer = setTimeout(async () => {
         const results = await getAnimebySearch(searchQuery);
         setSearchResults(results);
@@ -76,6 +112,14 @@ export const Browse = () => {
     
     return () => clearTimeout(timer);
     }, [searchQuery])
+
+    useEffect(() => {
+        if (activeGenre !== 'All') {
+            fetchGenreAnime(activeGenre);
+        } else {
+            setGenreResults([])
+        }
+    }, [activeGenre])
 
     const entries = animeEntryList.map(item => item.entry);
 
@@ -129,6 +173,11 @@ export const Browse = () => {
                         outline-none
                         "
                     />
+                    {searchQuery && (
+                        <button onClick={() => setSearchQuery('')} className="text-white/30 hover:text-white/60 transition-colors shrink-0">
+                            ✕
+                        </button>
+                    )}
                 </div>
                 <div className="relative">
                     <div className="
@@ -168,19 +217,37 @@ export const Browse = () => {
                                 <AnimeCard
                                 anime={anime}
                                 entry={entries.find(e => e.anilistId === anime.anilistId)}
-                                getData={() => fetchData()}
+                                onEntryChange={updateEntry}
                                 />
                             </div>
                         ))}
                     </div>
-                ) : (
+                ) : activeGenre === 'All' ? (
                     <>
-                        <BrowseRow title="Trending Now" items={trendingAnime} entries={entries} getData={() => fetchData()}/>
-                        <BrowseRow title="Top Rated" items={topRatedAnime} entries={entries} getData={() => fetchData()}/>
-                        <BrowseRow title="Movies" items={trendingMovies} entries={entries} getData={() => fetchData()}/>
-                        <BrowseRow title="Hidden Gems" items={hiddenGems} entries={entries} getData={() => fetchData()}/>
+                        <BrowseRow title="Trending Now" items={trendingAnime} entries={entries}  onEntryChange={updateEntry}/>
+                        <BrowseRow title="Top Rated" items={topRatedAnime} entries={entries}  onEntryChange={updateEntry}/>
+                        <BrowseRow title="Movies" items={trendingMovies} entries={entries}  onEntryChange={updateEntry}/>
+                        <BrowseRow title="Hidden Gems" items={hiddenGems} entries={entries}  onEntryChange={updateEntry}/>
                     </>
-                    )}
+                ) : (
+                    genreLoading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {genreResults.map((anime) => (
+                                <div key={anime.anilistId} className="w-full">
+                                    <AnimeCard
+                                    anime={anime}
+                                    entry={entries.find(e => e.anilistId === anime.anilistId)}
+                                    onEntryChange={updateEntry}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                    
             </div>
         </div>
     )

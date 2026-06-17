@@ -20,7 +20,7 @@ import { CreateListModal } from "../components/MyListsComponents/CreateListModal
 
 export const AnimeDetail = () => {
     const { id } = useParams();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const [animeDetails, setAnimeDetails] = useState<AnimeDetailType | null>(null);
     const [loading, setLoading] = useState(true)
     const [entry, setEntry] = useState<UserAnimeEntry | null>(null);

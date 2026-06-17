@@ -1,5 +1,4 @@
 // NEED USERNAME AND IFNO AND STUFF FROM DATABASE
-import { useAuth } from "../context/Authcontext";
 import { useEffect, useState } from "react";
 
 type NavItem = {

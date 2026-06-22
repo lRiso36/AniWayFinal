@@ -4,6 +4,7 @@ import type { AnimeType } from "../../types/AnimeType"
 import { getAnimebySearch } from "../../services/animeService"
 import { createUserList, updateUserList } from "../../services/userListsService"
 import { createPost } from "../../services/postService"
+import { TinyLoading } from "../Loading"
 
 type CreatListTypes = {
     isOpen: boolean,
@@ -189,9 +190,7 @@ export const CreateListModal = ({isOpen, currentInfo, initialAnime, onClose, onS
         )}
 
         {searchLoading && (
-            <div className="flex justify-center py-4">
-                <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            </div>
+            <TinyLoading loading={searchLoading} />
         )}
 
         {/* selected anime */}

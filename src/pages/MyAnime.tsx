@@ -5,6 +5,7 @@ import {getUserAnime} from "../services/userAnimeService"
 import type { UserAnimeEntry } from "../types/UserAnimeEntry"
 import type { AnimeType } from "../types/AnimeType"
 import { useState, useEffect } from "react"
+import { Loading } from "../components/Loading"
 
 export const MyAnime = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -44,11 +45,8 @@ export const MyAnime = () => {
     
 
     if (loading) return (
-    <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-    
-)
+    <Loading loading={loading} />
+    )
 
     return (
         <div className="min-h-screen bg-[#0a0a14] ">

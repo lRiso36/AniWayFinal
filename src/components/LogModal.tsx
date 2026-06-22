@@ -115,7 +115,7 @@ export const LogModal = ({isOpen, onClose, currentEntry, anime, onSave}: LogModa
                                 className="
                                 bg-[#2a2a3e] text-white 
                                 text-xs sm:text-sm rounded-lg 
-                                px-2 sm:px-3 py-1.5 sm:py-2 border 
+                                px-2 sm:px-3 py-2.5 sm:py-2 border 
                                 border-white/10 w-full"
                                 >
                                 <option value="watching">Watching</option>
@@ -130,7 +130,7 @@ export const LogModal = ({isOpen, onClose, currentEntry, anime, onSave}: LogModa
                                 <select
                                 value={currentEpisode}
                                 onChange={(e) => handleEpisodeChange(Number(e.target.value))}
-                                className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full"
+                                className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-2.5 sm:py-2 border border-white/10 w-full"
                                 >
                                     <option value={0}>Not Started</option>
                                     {anime.episodes

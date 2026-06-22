@@ -13,6 +13,7 @@ import { ProfileFollowing } from "../components/ProfileComponents/ProfileFollowi
 import { ProfileReviews } from "../components/ProfileComponents/ProfileReviews";
 import { EditProfileModal } from "../components/ProfileComponents/EditProfileModal";
 import { ProfileLists } from "../components/ProfileComponents/ProfileLists";
+import { Loading } from "../components/Loading";
 
 export const Profile = () => {
     const { username: currentUser } = useAuth();
@@ -67,9 +68,7 @@ export const Profile = () => {
     }, [profileData])
 
     if (isLoading) return (
-        <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <Loading loading={isLoading} />
     )
 
     if (!profileData) return (

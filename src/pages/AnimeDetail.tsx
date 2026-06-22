@@ -17,6 +17,7 @@ import { RateReviewModal } from "../components/RateReviewModal";
 import { AnimeReviews } from "../components/AnimeDetailReviews";
 import { AddToListModal } from "../components/AddToListsModal";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
+import { Loading, MiniLoading } from "../components/Loading";
 
 export const AnimeDetail = () => {
     const { id } = useParams();
@@ -113,9 +114,7 @@ export const AnimeDetail = () => {
         .trim();
 
     if (loading) return (
-        <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <Loading loading={loading} />
     )
 
     if (!animeDetails) return (
@@ -315,9 +314,7 @@ export const AnimeDetail = () => {
                 )}
                 {tab === 'episodes' && (
                     episodeLoading ? (
-                    <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-                        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                    </div>
+                    <MiniLoading loading={episodeLoading} />
                     ) : (
                     <EpisodeData episodes={episodeData} />)
                     )

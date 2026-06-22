@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { getComments, addComment } from "../../services/postService"
 import { ListCard } from "../MyListsComponents/ListCard"
 import type { ListType } from "../../types/ListType"
+import { TinyLoading } from "../Loading"
 
 type PostCardType = {
     post: PostType;
@@ -201,9 +202,7 @@ export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
             {commentsOpen && (
                 <div className="flex flex-col gap-3 pt-2 border-t border-white/5">
                     {commentsLoading ? (
-                        <div className="flex justify-center py-3">
-                            <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                        </div>
+                        <TinyLoading loading={commentsLoading} />
                     ) : comments.length === 0 ? (
                         <p className="text-white/30 text-xs text-center py-2">No comments yet</p>
                     ) : (

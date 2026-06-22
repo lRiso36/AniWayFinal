@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { getLikedLists, getUserLists } from "../services/userListsService";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
 import { useAuth } from "../context/Authcontext";
+import { Loading } from "../components/Loading";
 
 export const MyLists = () => {
     const { user } = useAuth();
@@ -31,9 +32,9 @@ export const MyLists = () => {
     useEffect(() => {
         const fetchAll = async () => {
             await Promise.all([fetchUserListData(), fetchLikedLists()])
+            setLoading(false);
         }
         fetchAll();
-        setLoading(false);
     },[]);
 
     const saveData = async() => {
@@ -48,10 +49,7 @@ export const MyLists = () => {
     const ownedByMe = lists.filter(list => list.userId === user?.id)
 
     if (loading) return (
-    <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-    
+        <Loading loading={loading} />
     )
 
     return (

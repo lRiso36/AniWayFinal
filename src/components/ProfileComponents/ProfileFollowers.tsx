@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getFollowers } from "../../services/followService";
 import { useNavigate } from "react-router-dom";
+import { MiniLoading } from "../Loading";
 
 type FollowUser = {
     id: string;
@@ -41,9 +42,7 @@ export const ProfileFollowers = ({ userId }: { userId: string }) => {
     }, [userId]);
 
     if (isLoading) return (
-        <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <MiniLoading loading={isLoading} />
     )
 
     if (followers.length === 0) return (

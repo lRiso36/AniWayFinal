@@ -3,6 +3,7 @@ import { getAnimebySearch } from "../../services/animeService";
 import { createPost } from "../../services/postService";
 import { logAnime, getUserAnimeStatus } from "../../services/userAnimeService";
 import { RatingSlider } from "../RatingSlider";
+import { TinyLoading } from "../Loading";
 
 type Props = {
     onClose: () => void;
@@ -121,9 +122,7 @@ export const CreatePostModal = ({ onClose, onPostCreated }: Props) => {
                         />
 
                         {searchLoading && (
-                            <div className="flex justify-center py-2">
-                                <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                            </div>
+                            <TinyLoading loading={searchLoading} />
                         )}
 
                         {searchResults.length > 0 && (

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes} from "react-router-dom"
+import { Toaster } from "react-hot-toast"
 import { Landing } from "./pages/Landing"
 import { SignUp } from "./pages/SignUp"
 import { Login } from "./pages/Login"
@@ -14,7 +15,7 @@ function App() {
     <>
     <BrowserRouter>
     <AuthProvider>
-      
+      <Toaster />
         <Routes>
           <Route path="/" element={<Landing/>}></Route>
           <Route path="/Signup" element={<SignUp/>}></Route>
@@ -27,7 +28,6 @@ function App() {
             </ProtectedRoute>
             }></Route>
         </Routes>
-      
     </AuthProvider>
     </BrowserRouter>
     </>
@@ -35,4 +35,3 @@ function App() {
 }
 
 export default App
-

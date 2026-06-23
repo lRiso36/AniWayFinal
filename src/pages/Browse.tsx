@@ -7,7 +7,7 @@ import { getUserAnime } from "../services/userAnimeService";
 import { getAnimebySearch } from "../services/animeService";
 import { AnimeCard } from "../components/AnimeCard";
 import { getAnimeByGenre } from "../services/animeGenreService";
-import { Loading, MiniLoading } from "../components/Loading";
+
 
 const genres = [
     "All",
@@ -123,9 +123,11 @@ export const Browse = () => {
 
     const entries = animeEntryList.map(item => item.entry);
 
-
-    if (loading) return <Loading loading={loading} />
-
+    if (loading) return (
+    <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+    )
     return (
         <div className="min-h-screen bg-[#0a0a14] ">
             <div className="
@@ -229,7 +231,9 @@ export const Browse = () => {
                     </>
                 ) : (
                     genreLoading ? (
-                        <MiniLoading loading={genreLoading}/>
+                        <div className="flex items-center justify-center py-20">
+                            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
                     ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
                             {genreResults.map((anime) => (

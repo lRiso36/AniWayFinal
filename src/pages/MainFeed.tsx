@@ -3,7 +3,6 @@ import { getFeed, deletePost } from "../services/postService"
 import { PostCard } from "../components/PostComponents/postCard"
 import { CreatePostModal } from "../components/PostComponents/CreatePostModal"
 import { useAuth } from "../context/Authcontext"
-import { MiniLoading } from "../components/Loading"
 
 //post card 
 //compose box
@@ -92,7 +91,9 @@ export const MainFeed = () => {
                 </div>
 
                 {isLoading ? (
-                    <MiniLoading loading={isLoading} />
+                    <div className="flex justify-center py-10">
+                        <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
                 ) : posts.length === 0 ? (
                     <p className="text-white/30 text-sm text-center py-10">
                         {filter === 'following' ? "No posts from people you follow yet" : "No posts yet"}

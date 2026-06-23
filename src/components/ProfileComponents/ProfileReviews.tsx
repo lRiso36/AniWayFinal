@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import type { ReviewType } from "../../types/ReviewType";
 import { getUserReviews } from "../../services/reviewService";
 import { useNavigate } from "react-router-dom";
-import { MiniLoading } from "../Loading";
 
 type ProfileReviewsType = {
     userId: string;
@@ -51,7 +50,9 @@ export const ProfileReviews = ({userId}: ProfileReviewsType) => {
     }, [])
  
     if (isLoading) return (
-        <MiniLoading loading={isLoading} />
+        <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        </div>
     )
 
     if (reviews.length === 0) return (

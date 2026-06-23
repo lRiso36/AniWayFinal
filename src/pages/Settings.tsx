@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Authcontext";
 import { checkEmailAvailable, updatePassword, updateEmail } from "../services/authServices";
+import toast from "react-hot-toast";
 
 export const Settings = () => {
     const { logout, username, user } = useAuth();
@@ -20,8 +21,12 @@ export const Settings = () => {
     const [passwordError, setPasswordError] = useState<string | null>(null);
 
     const handleLogout = async () => {
-        await logout();
-        navigate('/');
+        try {
+            await logout();
+            navigate('/');
+        } catch (err) {
+            toast.error("Failed to log out, please try again")
+        }
     }
 
     const handleEmailChange = async () => {
@@ -30,25 +35,21 @@ export const Settings = () => {
         setEmailError(null);
         setEmailMessage(null);
 
-
-        const isAvailable = await checkEmailAvailable(newEmail.trim());
-        console.log('isAvailable', isAvailable);
-        if (!isAvailable) {
-            setEmailError('That email is already in use');
-            setEmailLoading(false);
-            return;
-        }
-
         try {
+            const isAvailable = await checkEmailAvailable(newEmail.trim());
+            if (!isAvailable) {
+                setEmailError('That email is already in use');
+                return;
+            }
             await updateEmail(user!.id, newEmail.trim());
             setEmailMessage('Check both your old and new email for a confirmation link.');
             setNewEmail('');
             setShowEmailForm(false);
         } catch (error: any) {
-            console.log('email error:', error);
-            setEmailError(error.message);
+            setEmailError(error.message || "Something went wrong, please try again");
+        } finally {
+            setEmailLoading(false);
         }
-        setEmailLoading(false);
     }
 
     const handlePasswordChange = async () => {
@@ -75,7 +76,6 @@ export const Settings = () => {
         setPasswordError(null);
         setPasswordMessage(null);
 
-
         try {
             await updatePassword(newPassword);
             setPasswordMessage('Password updated successfully.');
@@ -83,10 +83,10 @@ export const Settings = () => {
             setConfirmPassword('');
             setShowPasswordForm(false);
         } catch (error: any) {
-            setPasswordError(error.message)
+            setPasswordError(error.message || "Something went wrong, please try again");
+        } finally {
+            setPasswordLoading(false);
         }
-        
-        setPasswordLoading(false);
     }
 
     return (
@@ -114,12 +114,6 @@ export const Settings = () => {
                                     <p className="text-white/40 text-xs mb-0.5">Email</p>
                                     <p className="text-white text-sm">{user?.email}</p>
                                 </div>
-                                {/* <button
-                                    onClick={() => { setShowEmailForm(!showEmailForm); setEmailError(null); setEmailMessage(null); }}
-                                    className="text-purple-400 text-xs hover:text-purple-300 transition-colors"
-                                >
-                                    {showEmailForm ? 'Cancel' : 'Change'}
-                                </button> */}
                             </div>
                             {showEmailForm && (
                                 <div className="flex flex-col gap-2 px-4 pb-4">
@@ -151,7 +145,7 @@ export const Settings = () => {
                                     <p className="text-white text-sm">••••••••</p>
                                 </div>
                                 <button
-                                    onClick={() => { setShowPasswordForm(!showPasswordForm); setPasswordError(null); setPasswordMessage(null); }}
+                                    onClick={() => { setShowPasswordForm(!showPasswordForm); setPasswordError(null); setPasswordMessage(null); setConfirmPassword(''); setNewPassword('') }}
                                     className="text-purple-400 text-xs hover:text-purple-300 transition-colors"
                                 >
                                     {showPasswordForm ? 'Cancel' : 'Change'}

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { getLikedLists, getUserLists } from "../../services/userListsService";
 import type { ListType } from "../../types/ListType";
 import { ListsContainer } from "../MyListsComponents/ListContainer";
-import { MiniLoading } from "../Loading";
 
 type ProfileListsType = {
     userId: string;
@@ -27,7 +26,9 @@ export const ProfileLists = ({userId}: ProfileListsType) => {
     },[userId]);
 
     if (loading) return (
-        <MiniLoading loading={loading} />
+        <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        </div>
     )
 
     const allLists = [...lists, ...likedLists];

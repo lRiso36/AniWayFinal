@@ -6,7 +6,6 @@ import { useAuth } from "../context/Authcontext";
 import { AnimeCard } from "../components/AnimeCard";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
 import { useListLike } from "../components/MyListsComponents/useListLike";
-import { Loading } from "../components/Loading";
 
 export const ListDetail = () => {
     const { listId } = useParams();
@@ -31,7 +30,9 @@ export const ListDetail = () => {
     const isOwner = user?.id === list?.userId;
 
     if (loading) return (
-        <Loading loading={loading} />
+        <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        </div>
     );
 
     if (!list) return (

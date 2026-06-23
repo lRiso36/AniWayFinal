@@ -1,7 +1,6 @@
 import { useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { searchUsers } from "../services/followService";
-import { MiniLoading } from "../components/Loading";
 
 const RECENTS_KEY = "recentMemberSearches";
 const MAX_RECENTS = 8;
@@ -88,7 +87,9 @@ export const Members = () => {
                 {/* content */}
                 {showingResults ? (
                     loading ? (
-                        <MiniLoading loading={loading} />
+                        <div className="flex justify-center py-10">
+                            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
                     ) : results.length === 0 ? (
                         <p className="text-white/30 text-sm sm:text-base text-center py-10">No users found for "{query.trim()}"</p>
                     ) : (

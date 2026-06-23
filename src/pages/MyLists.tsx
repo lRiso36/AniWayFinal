@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { getLikedLists, getUserLists } from "../services/userListsService";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
 import { useAuth } from "../context/Authcontext";
+import { Loading } from "../components/Loading";
+import toast from "react-hot-toast";
 
 export const MyLists = () => {
     const { user } = useAuth();
@@ -13,50 +15,61 @@ export const MyLists = () => {
     const tab = searchParams.get("tab") || "all-lists";
     const [lists, setLists] = useState<ListType[]>([]);
     const [likedLists, setLikedLists] = useState<ListType[]>([]);
-    const [createActive, setCreateActive ] = useState(false);
+    const [createActive, setCreateActive] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const fetchUserListData = async () => {
-        const data = await getUserLists();
-        setLists(data);
+        try {
+            const data = await getUserLists();
+            setLists(data);
+        } catch (err) {
+            toast.error("Failed to get user lists")
+        }
     }
 
     const fetchLikedLists = async () => {
-        const data = await getLikedLists();
-        setLikedLists(data);
-        console.log(data);
-        console.log(likedLists);
+        try {
+            const data = await getLikedLists();
+            setLikedLists(data);
+        } catch (err) {
+            toast.error("Failed to get liked lists")
+        }
     }
 
     useEffect(() => {
         const fetchAll = async () => {
-            await Promise.all([fetchUserListData(), fetchLikedLists()])
+            try {
+                await Promise.all([fetchUserListData(), fetchLikedLists()])
+            } finally {
+                setLoading(false);
+            }
         }
         fetchAll();
-        setLoading(false);
-    },[]);
+    }, []);
 
-    const saveData = async() => {
-        setCreateActive(false);
-        await fetchUserListData();
+    const saveData = async () => {
+        try {
+            await fetchUserListData();
+        } catch (err) {
+            toast.error("List created but failed to refresh, please reload the page");
+        } finally {
+            setCreateActive(false);
+        }
     }
 
     const handleDelete = (listId: string) => {
         setLists(prev => prev.filter(l => l.id !== listId));
     }
-    
+
     const ownedByMe = lists.filter(list => list.userId === user?.id)
 
     if (loading) return (
-    <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-    
+        <Loading loading={loading} />
     )
 
     return (
         <div className="min-h-screen bg-[#0a0a14] ">
-                <div className="
+            <div className="
                 max-w-6xl
                 mx-auto
                 px-4 
@@ -66,62 +79,60 @@ export const MyLists = () => {
                 flex-col 
                 gap-8 
                 w-full">
-                    
-                    <div className="flex justify-between">
-                        <h2 className="ml-3 text-white text-2xl font-semibold">My Lists</h2>
-                        <button className="
+
+                <div className="flex justify-between">
+                    <h2 className="ml-3 text-white text-2xl font-semibold">My Lists</h2>
+                    <button className="
                         flex items-center gap-1.5
                         bg-purple-600 hover:bg-purple-500 
                         text-white text-sm sm:text-lg font-medium 
                         px-4 py-2 rounded-lg transition-colors
                         "
-                        onClick={()=> setCreateActive(true)}
-                        ><span className="text-xl sm:text-2xl font-bold -mt-0.5 sm:-mt-1">+</span> Create List</button>
-                    </div>
-                    <MyListsNavBar />
-                    <div>
-                    {tab === "all-lists" && 
-                    <div className="flex flex-col gap-4 -mt-4">
-                        <ListsContainer 
-                        lists={ownedByMe} 
-                        title="Owned By Me"
-                        onDelete={handleDelete} 
-                        onEditSave={fetchUserListData} 
-                        />
-                        <ListsContainer
-                        lists={likedLists} 
-                        title="Liked"
-                        onDelete={handleDelete} 
-                        onEditSave={fetchUserListData} 
-                        />
-                     </div>
-                    }
-                    {tab === "owned-by-me" && 
-                    <div className="-mt-4 sm:-mt-2">
-                    <ListsContainer 
-                    lists={ownedByMe} 
-                    onDelete={handleDelete} 
-                    onEditSave={fetchUserListData}
-                    />
-                    </div>
-                    }
-                    {tab === "liked" && 
-                    <div className="-mt-4 sm:-mt-2">
-                    <ListsContainer 
-                    lists={likedLists} 
-                    onDelete={handleDelete} 
-                    onEditSave={fetchUserListData}
-                    />
-                    </div>
-                    }      
-                    </div>
+                        onClick={() => setCreateActive(true)}
+                    ><span className="text-xl sm:text-2xl font-bold -mt-0.5 sm:-mt-1">+</span> Create List</button>
                 </div>
+                <MyListsNavBar />
+                <div>
+                    {tab === "all-lists" &&
+                        <div className="flex flex-col gap-4 -mt-4">
+                            <ListsContainer
+                                lists={ownedByMe}
+                                title="Owned By Me"
+                                onDelete={handleDelete}
+                                onEditSave={fetchUserListData}
+                            />
+                            <ListsContainer
+                                lists={likedLists}
+                                title="Liked"
+                                onDelete={handleDelete}
+                                onEditSave={fetchUserListData}
+                            />
+                        </div>
+                    }
+                    {tab === "owned-by-me" &&
+                        <div className="-mt-4 sm:-mt-2">
+                            <ListsContainer
+                                lists={ownedByMe}
+                                onDelete={handleDelete}
+                                onEditSave={fetchUserListData}
+                            />
+                        </div>
+                    }
+                    {tab === "liked" &&
+                        <div className="-mt-4 sm:-mt-2">
+                            <ListsContainer
+                                lists={likedLists}
+                                onDelete={handleDelete}
+                                onEditSave={fetchUserListData}
+                            />
+                        </div>
+                    }
+                </div>
+            </div>
             <CreateListModal
-            isOpen={createActive}
-            onClose={() => setCreateActive(false)}
-            onSave={() => 
-                saveData()
-            }
+                isOpen={createActive}
+                onClose={() => setCreateActive(false)}
+                onSave={() => saveData()}
             />
         </div>
     )

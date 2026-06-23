@@ -13,49 +13,86 @@ import { ProfileFollowing } from "../components/ProfileComponents/ProfileFollowi
 import { ProfileReviews } from "../components/ProfileComponents/ProfileReviews";
 import { EditProfileModal } from "../components/ProfileComponents/EditProfileModal";
 import { ProfileLists } from "../components/ProfileComponents/ProfileLists";
+import { Loading } from "../components/Loading";
+import toast from "react-hot-toast";
 
 export const Profile = () => {
     const { username: currentUser } = useAuth();
-    const {username} = useParams();
+    const { username } = useParams();
     const [isLoading, setIsLoading] = useState(true);
     const [profileData, setProfileData] = useState<ProfileType | null>(null);
     const [searchParams, setSearchParams] = useSearchParams();
-    const[isFollowing, setIsFollowing] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(false);
     const tab = searchParams.get("tab") || "anime";
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [error, setError] = useState(false);
+    const [followStatusError, setFollowStatusError] = useState(false);
+    const [isFollowLoading, setIsFollowLoading] = useState(false);
 
     const handleEditClick = () => {
         setEditModalOpen(true);
     }
 
     const handleFollowClick = async () => {
-        if (!profileData) return;
+        if (!profileData || isFollowLoading) return;
 
-        if(isFollowing) {
-            await unfollowUser(profileData.id);
+        const previousIsFollowing = isFollowing;
+        const previousProfileData = profileData;
+
+        setIsFollowLoading(true);
+
+        if (isFollowing) {
             setIsFollowing(false);
-            setProfileData(prev => prev ? {...prev, followers: prev.followers - 1} : prev)
+            setProfileData(prev => prev ? { ...prev, followers: prev.followers - 1 } : prev)
+
+            try {
+                await unfollowUser(profileData.id);
+            } catch (err) {
+                setIsFollowing(previousIsFollowing);
+                setProfileData(previousProfileData);
+                toast.error("Failed to unfollow, please try again")
+            }
         } else {
-            await followUser(profileData.id);
             setIsFollowing(true);
-            setProfileData(prev => prev ? {...prev, followers: prev.followers + 1} : prev)
+            setProfileData(prev => prev ? { ...prev, followers: prev.followers + 1 } : prev)
+
+            try {
+                await followUser(profileData.id);
+            } catch (err) {
+                setIsFollowing(previousIsFollowing);
+                setProfileData(previousProfileData);
+                toast.error("Failed to follow, please try again");
+            }
         }
+
+        setIsFollowLoading(false);
     }
 
     const fetchProfileData = async () => {
         if (!username) return;
         setIsLoading(true)
-        const data = await getProfile(username);
-        setProfileData(data);
-        setIsLoading(false);
+        try {
+            const data = await getProfile(username);
+            setProfileData(data);
+        } catch (err) {
+            toast.error("Failed to load profile")
+            setError(true);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
-    const fetchIsFollowing = async() => {
+    const fetchIsFollowing = async () => {
         if (!username || !profileData) return
-        //skip if your own profile
         if (currentUser === username) return
-        const result = await getIsFollowing(profileData.id);
-        setIsFollowing(result);
+
+        try {
+            const result = await getIsFollowing(profileData.id);
+            setIsFollowing(result);
+        } catch (err) {
+            toast.error("Failed to load follow status")
+            setFollowStatusError(true);
+        }
     }
 
     useEffect(() => {
@@ -64,11 +101,13 @@ export const Profile = () => {
 
     useEffect(() => {
         fetchIsFollowing();
-    }, [profileData])
+    }, [profileData?.id])
 
-    if (isLoading) return (
+    if (isLoading) return <Loading loading={isLoading} />
+
+    if (error) return (
         <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-white/50">Failed to load profile</p>
         </div>
     )
 
@@ -79,51 +118,37 @@ export const Profile = () => {
     )
 
     return (
-        <div className="min-h-screen bg-[#0a0a14] ">
-                <div className="
-                max-w-6xl
-                mx-auto      
-                flex 
-                flex-col 
-                gap-8 
-                w-full">
-            <ProfileHeader
-            profileData={profileData}
-            isFollowing={isFollowing}
-            onEditClick={
-                handleEditClick
-            }
-            onFollowClick={
-                handleFollowClick
-            }
-            onReviewsClick={() => setSearchParams({tab: 'reviews'})}
-            onFollowersClick={() => setSearchParams({ tab: 'followers' })}
-            onFollowingClick={() => setSearchParams({ tab: 'following' })}
-            />
-            <ProfileNavBar />
-
-            <div className="max-w-6xl mx-auto w-full px-4 sm:px-8">
-            {tab === "anime" && <div>
-                <ProfileAnime 
-                animeEntries={profileData.userAnime}
+        <div className="min-h-screen bg-[#0a0a14]">
+            <div className="max-w-6xl mx-auto flex flex-col gap-8 w-full">
+                <ProfileHeader
+                    profileData={profileData}
+                    isFollowing={isFollowing}
+                    followStatusError={followStatusError}
+                    onEditClick={handleEditClick}
+                    onFollowClick={handleFollowClick}
+                    onReviewsClick={() => setSearchParams({ tab: 'reviews' })}
+                    onFollowersClick={() => setSearchParams({ tab: 'followers' })}
+                    onFollowingClick={() => setSearchParams({ tab: 'following' })}
                 />
-                </div>}
-            {tab === "lists" && <ProfileLists userId={profileData.id} />}
-            {tab === "reviews" && <ProfileReviews userId={profileData.id}/>}
-            {tab === "followers" && <ProfileFollowers userId={profileData.id} />}
-            {tab === "following" && <ProfileFollowing userId={profileData.id} />}
-            {editModalOpen && profileData && (
-    <EditProfileModal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        profileData={profileData}
-        onSave={(updated) => {
-            setProfileData(prev => prev ? { ...prev, ...updated } : prev);
-        }}
-    />
-)}
-        </div>
-        </div>
+                <ProfileNavBar />
+                <div className="max-w-6xl mx-auto w-full px-4 sm:px-8">
+                    {tab === "anime" && <div><ProfileAnime animeEntries={profileData.userAnime} /></div>}
+                    {tab === "lists" && <ProfileLists userId={profileData.id} />}
+                    {tab === "reviews" && <ProfileReviews userId={profileData.id} />}
+                    {tab === "followers" && <ProfileFollowers userId={profileData.id} />}
+                    {tab === "following" && <ProfileFollowing userId={profileData.id} />}
+                    {editModalOpen && profileData && (
+                        <EditProfileModal
+                            isOpen={editModalOpen}
+                            onClose={() => setEditModalOpen(false)}
+                            profileData={profileData}
+                            onSave={(updated) => {
+                                setProfileData(prev => prev ? { ...prev, ...updated } : prev);
+                            }}
+                        />
+                    )}
+                </div>
+            </div>
         </div>
     )
 }

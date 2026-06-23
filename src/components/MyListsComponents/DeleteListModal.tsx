@@ -1,5 +1,6 @@
 import type { ListType } from "../../types/ListType"
 import { deleteUserList } from "../../services/userListsService"
+import toast from "react-hot-toast"
 
 type DeleteListModalTypes = {
     isOpen: boolean,
@@ -14,7 +15,9 @@ export const DeleteListModal = ({ isOpen, onClose, list, onSave }: DeleteListMod
             await deleteUserList(list.id);
             onSave();
         } catch (error) {
-            console.error(error);
+            toast.error("Failed to delete list, please try again")
+        } finally {
+            onClose();
         }
     }
 
@@ -29,7 +32,6 @@ export const DeleteListModal = ({ isOpen, onClose, list, onSave }: DeleteListMod
                 className="bg-[#1e1e2e] rounded-xl p-4 sm:p-6 w-full max-w-md mx-4 flex flex-col gap-4 border border-white/10"
                 onClick={e => e.stopPropagation()}
             >
-                {/* header */}
                 <div className="flex items-center justify-between">
                     <div />
                     <h2 className="text-white font-semibold text-lg sm:text-xl text-center">Delete {list.name}?</h2>

@@ -4,6 +4,7 @@ import { useAuth } from "../../context/Authcontext";
 type ProfileHeaderType = {
   profileData: ProfileType;
   isFollowing: boolean;
+  followStatusError: boolean;
   onEditClick: () => void;
   onFollowClick: () => void;
   onFollowersClick: () => void
@@ -14,6 +15,7 @@ type ProfileHeaderType = {
 export const ProfileHeader = ({
   profileData,
   isFollowing,
+  followStatusError,
   onEditClick,
   onFollowClick,
   onFollowersClick,
@@ -46,7 +48,7 @@ export const ProfileHeader = ({
       </div>
 
         <div className="max-w-6xl mx-auto w-full px-6 sm:px-12">
-        
+
             {/* avatar/name/button row */}
             <div className="flex justify-between items-start -mt-20 sm:-mt-24 relative z-10">
                 <div className="flex items-end gap-4">
@@ -109,13 +111,18 @@ export const ProfileHeader = ({
             ) : (
             <button
               onClick={onFollowClick}
+              disabled={followStatusError}
               className={`shrink-0 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors group ${
-              isFollowing 
-              ? 'bg-white/10 hover:bg-white/20 border border-white/20' 
+              followStatusError
+              ? 'opacity-50 cursor-not-allowed bg-white/10 border border-white/20'
+              : isFollowing
+              ? 'bg-white/10 hover:bg-white/20 border border-white/20'
               : 'bg-purple-600 hover:bg-purple-500'
               }`}
             >
-            {isFollowing ? (
+            {followStatusError
+            ? 'Unavailable'
+            : isFollowing ? (
               <>
               <span className="group-hover:hidden">Following</span>
               <span className="hidden group-hover:inline text-red-400">Unfollow</span>
@@ -126,7 +133,7 @@ export const ProfileHeader = ({
         </div>
 
             {/* stats row */}
-            <div className="flex justify-center gap-4 
+            <div className="flex justify-center gap-4
             sm:gap-10 mt-5 sm:pb-10 pb-4 border-b border-white/10 overflow-x-auto">
                 <Stat label="Watched" value={profileData.watched} />
                 <Stat label="Watching" value={profileData.watching} />

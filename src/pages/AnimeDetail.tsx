@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import type { AnimeDetailType } from "../types/AnimeDetailType";
 import { getAnimeById } from "../services/animeService";
@@ -17,6 +17,8 @@ import { RateReviewModal } from "../components/RateReviewModal";
 import { AnimeReviews } from "../components/AnimeDetailReviews";
 import { AddToListModal } from "../components/AddToListsModal";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
+import { toastError } from "../lib/toast";
+import { Loading } from "../components/Loading";
 
 export const AnimeDetail = () => {
     const { id } = useParams();
@@ -28,27 +30,33 @@ export const AnimeDetail = () => {
     const tab = searchParams.get("tab") || "details";
     const [episodeData, setEpisodeData] = useState<EpisodeType[]>([]);
     const [episodeLoading, setEpisodeLoading] = useState(true);
-    const [activeModal, setActiveModal] = useState<'log' | 'remove' | 'rate-review'| 'list' | 'create-list' | null>(null);
+    const [activeModal, setActiveModal] = useState<'log' | 'remove' | 'rate-review' | 'list' | 'create-list' | null>(null);
     const [showToast, setShowToast] = useState(false);
     const canRemove = entry ? true : false;
 
     const MENU_ITEMS = [
-    { label: "⭐ Rate & Review", id: "rate-review" },
-    { label: "📋 Add to List", id: "list" },
+        { label: "⭐ Rate & Review", id: "rate-review" },
+        { label: "📋 Add to List", id: "list" },
     ];
 
     const fetchEpisodeData = async (id: number) => {
         setEpisodeLoading(true);
-        const data = await getEpisodeData(id);
-        if (!data) {
-            setEpisodeData([]);
+        try {
+            const data = await getEpisodeData(id);
+            if (!data) {
+                setEpisodeData([]);
+            }
+            setEpisodeData(data ?? []);
+        } catch {
+            toastError("Failed to get episode data");
+        } finally {
+            setEpisodeLoading(false);
         }
-        setEpisodeData(data ?? []);
-        setEpisodeLoading(false);
     }
 
     const fetchAnimeDetails = async () => {
         setLoading(true);
+        try {
         const [details, userAnime] = await Promise.all([
             getAnimeById(Number(id)),
             getUserAnime()
@@ -56,25 +64,28 @@ export const AnimeDetail = () => {
         setAnimeDetails(details)
         const match = userAnime.find((item: any) => item.anime.anilistId === Number(id))
         setEntry(match?.entry ?? null)
-        setLoading(false)
+        } catch {
+            toastError("Unable to get anime deatils at this time. Please try again later.")
+        } finally {
+            setLoading(false)
+        }
     }
-
 
     const toggleFavorite = async () => {
         const wasFavorite = entry?.isFavorite ?? false;
 
         setEntry(prev =>
             prev
-            ? {...prev, isFavorite: !wasFavorite}
-            : {
-                anilistId: animeDetails!.anilistId,
-                status: 'completed',
-                currentEpisode: animeDetails!.episodes ?? 0,
-                score: null,
-                isFavorite: true,
-                startDate: null,
-                finishDate: null,
-            }
+                ? { ...prev, isFavorite: !wasFavorite }
+                : {
+                    anilistId: animeDetails!.anilistId,
+                    status: 'completed',
+                    currentEpisode: animeDetails!.episodes ?? 0,
+                    score: null,
+                    isFavorite: true,
+                    startDate: null,
+                    finishDate: null,
+                }
         );
 
         try {
@@ -83,16 +94,19 @@ export const AnimeDetail = () => {
                 animeDetails!.episodes
             );
         } catch (error) {
-            console.error(error)
-
+            if (wasFavorite) {
+                toastError("Cannot remove from favorites right now. Try again later.")
+            } else {
+                toastError("Cannot add to favorites right now. Try again later.")
+            }
             //revert if request fails
             setEntry(prev =>
                 prev
-                ? {...prev, isFavorite: wasFavorite}
-                : null
+                    ? { ...prev, isFavorite: wasFavorite }
+                    : null
             )
         } // end catch
-      } //end toggle
+    } //end toggle
 
     //get anime details
     useEffect(() => {
@@ -113,9 +127,7 @@ export const AnimeDetail = () => {
         .trim();
 
     if (loading) return (
-        <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <Loading loading={loading} />
     )
 
     if (!animeDetails) return (
@@ -154,20 +166,19 @@ export const AnimeDetail = () => {
                 {entry ? (entry.status === 'watching' ? 'Watching' : entry.status === 'completed' ? 'Completed' : 'Plan to Watch') : 'Not Added'}
             </button>
             <button className="bg-white/10 hover:bg-white/20 text-white text-sm sm:text-base font-bold px-5 py-2 rounded-lg transition-colors"
-            onClick={() => setActiveModal('log')}
+                onClick={() => setActiveModal('log')}
             >Log</button>
             <button
-            onClick={toggleFavorite}
-            className={`text-sm sm:text-base px-3 py-2 rounded-lg transition-colors ${
-            entry?.isFavorite
-            ? 'bg-pink-500/20 text-pink-400'
-            : 'bg-white/10 hover:bg-white/20 text-white'
-            }`}
+                onClick={toggleFavorite}
+                className={`text-sm sm:text-base px-3 py-2 rounded-lg transition-colors ${entry?.isFavorite
+                        ? 'bg-pink-500/20 text-pink-400'
+                        : 'bg-white/10 hover:bg-white/20 text-white'
+                    }`}
             >
-            {entry?.isFavorite ? '❤️' : '🤍'}
+                {entry?.isFavorite ? '❤️' : '🤍'}
             </button>
             <ActionMenu />
-            </div>
+        </div>
     )
     const progressBox = entry && (
         <div className="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-xl p-4 w-56 shrink-0 self-end">
@@ -186,55 +197,55 @@ export const AnimeDetail = () => {
     )
 
     const scoreBadge = animeDetails.averageScore && (
-    <span className="text-zinc-300 text-sm sm:text-base px-2 py-1 rounded-md flex items-center gap-1 font-semibold">
-        <span className="text-purple-500 text-lg" style={{paddingBottom: '1px'}}>★</span> {(animeDetails.averageScore / 10).toFixed(1)}
-    </span>
+        <span className="text-zinc-300 text-sm sm:text-base px-2 py-1 rounded-md flex items-center gap-1 font-semibold">
+            <span className="text-purple-500 text-lg" style={{ paddingBottom: '1px' }}>★</span> {(animeDetails.averageScore / 10).toFixed(1)}
+        </span>
     )
 
     const ActionMenu = () => {
-    const localMenuRef = useRef<HTMLDivElement>(null);
-    const [localMenuOpen, setLocalMenuOpen] = useState(false);
-    const [localOpenLeft, setLocalOpenLeft] = useState(false);
+        const localMenuRef = useRef<HTMLDivElement>(null);
+        const [localMenuOpen, setLocalMenuOpen] = useState(false);
+        const [localOpenLeft, setLocalOpenLeft] = useState(false);
 
-    useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (localMenuRef.current && !localMenuRef.current.contains(e.target as Node)) {
-                setLocalMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
-    }, []);
+        useEffect(() => {
+            const handleClick = (e: MouseEvent) => {
+                if (localMenuRef.current && !localMenuRef.current.contains(e.target as Node)) {
+                    setLocalMenuOpen(false);
+                }
+            };
+            document.addEventListener("mousedown", handleClick);
+            return () => document.removeEventListener("mousedown", handleClick);
+        }, []);
 
-    return (
-        <div ref={localMenuRef} className="relative">
-            <button
-                className="bg-white/10 hover:bg-white/20 text-white text-sm sm:text-base px-3 py-2 rounded-lg transition-colors"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (!localMenuOpen) {
-                        const pos = localMenuRef.current?.getBoundingClientRect();
-                        if (pos) {
-                            setLocalOpenLeft(window.innerWidth - pos.right < 200);
+        return (
+            <div ref={localMenuRef} className="relative">
+                <button
+                    className="bg-white/10 hover:bg-white/20 text-white text-sm sm:text-base px-3 py-2 rounded-lg transition-colors"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (!localMenuOpen) {
+                            const pos = localMenuRef.current?.getBoundingClientRect();
+                            if (pos) {
+                                setLocalOpenLeft(window.innerWidth - pos.right < 200);
+                            }
                         }
-                    }
-                    setLocalMenuOpen(!localMenuOpen);
-                }}
-            >···</button>
-            <AnimeCardMenu
-                menuOpen={localMenuOpen}
-                openLeft={localOpenLeft}
-                items={MENU_ITEMS}
-                canRemove={canRemove}
-                onClose={() => setLocalMenuOpen(false)}
-                onSelect={(id) => {
-                    if (id === 'remove') setActiveModal('remove');
-                    if (id === 'rate-review') setActiveModal('rate-review');
-                    if (id === 'list') { setActiveModal('list')}
-                }}
-            />
-        </div>
-    );
+                        setLocalMenuOpen(!localMenuOpen);
+                    }}
+                >···</button>
+                <AnimeCardMenu
+                    menuOpen={localMenuOpen}
+                    openLeft={localOpenLeft}
+                    items={MENU_ITEMS}
+                    canRemove={canRemove}
+                    onClose={() => setLocalMenuOpen(false)}
+                    onSelect={(id) => {
+                        if (id === 'remove') setActiveModal('remove');
+                        if (id === 'rate-review') setActiveModal('rate-review');
+                        if (id === 'list') { setActiveModal('list') }
+                    }}
+                />
+            </div>
+        );
     };
 
     return (
@@ -311,81 +322,81 @@ export const AnimeDetail = () => {
             <div className="max-w-6xl mx-auto px-4 sm:px-8 mt-6">
                 {tab === 'details' && (
                     <AnimeInfo animeDetails={animeDetails} />
-                    
+
                 )}
                 {tab === 'episodes' && (
                     episodeLoading ? (
-                    <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-                        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                    </div>
+                        <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
+                            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
                     ) : (
-                    <EpisodeData episodes={episodeData} />)
-                    )
+                        <EpisodeData episodes={episodeData} />)
+                )
                 }
                 {tab === 'characters-and-cast' && (
                     <CharacterList characters={animeDetails.characters} />
                 )}
                 {tab === 'reviews' && (
-                    <AnimeReviews animeId={animeDetails.anilistId}/>
+                    <AnimeReviews animeId={animeDetails.anilistId} />
                 )}
             </div>
             <LogModal
-            isOpen={activeModal === 'log'}
-            onClose={() => setActiveModal(null)}
-            anime={animeDetails}
-            currentEntry={entry ?? undefined}
-            onSave={(updated) => {
-              setActiveModal(null);
-              setEntry(updated);
-             }}
+                isOpen={activeModal === 'log'}
+                onClose={() => setActiveModal(null)}
+                anime={animeDetails}
+                currentEntry={entry ?? undefined}
+                onSave={(updated) => {
+                    setActiveModal(null);
+                    setEntry(updated);
+                }}
             />
             <RemoveModal
-            isOpen={activeModal === 'remove'}
-            onClose={() => setActiveModal(null)}
-            anime={animeDetails}
-            currentEntry={entry ?? undefined}
-            onSave={() => {
-            setActiveModal(null);
-            setEntry(null);
-            }}
+                isOpen={activeModal === 'remove'}
+                onClose={() => setActiveModal(null)}
+                anime={animeDetails}
+                currentEntry={entry ?? undefined}
+                onSave={() => {
+                    setActiveModal(null);
+                    setEntry(null);
+                }}
             />
             <RateReviewModal
-            isOpen={activeModal === 'rate-review'}
-            onClose={() => setActiveModal(null)}
-            anime={animeDetails}
-            currentEntry={entry ?? undefined}
-            onSave={(updated) => {
-                setActiveModal(null);
-                setEntry(updated);
-            }}
-            onPosted={() => {
-                setShowToast(true);
-                setTimeout(() => setShowToast(false), 2500);
-            }}
+                isOpen={activeModal === 'rate-review'}
+                onClose={() => setActiveModal(null)}
+                anime={animeDetails}
+                currentEntry={entry ?? undefined}
+                onSave={(updated) => {
+                    setActiveModal(null);
+                    setEntry(updated);
+                }}
+                onPosted={() => {
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 2500);
+                }}
             />
             {activeModal === 'list' && (
                 <AddToListModal
-                isOpen={activeModal === 'list'}
-                onClose={() => setActiveModal(null)}
-                animeToAdd={animeDetails}
-                onSave={() =>
-                setActiveModal(null)
-                }
-                onCreateList={() => setActiveModal('create-list')}
+                    isOpen={activeModal === 'list'}
+                    onClose={() => setActiveModal(null)}
+                    animeToAdd={animeDetails}
+                    onSave={() =>
+                        setActiveModal(null)
+                    }
+                    onCreateList={() => setActiveModal('create-list')}
                 />
             )}
             {activeModal === 'create-list' && (
-                      <CreateListModal
-                      isOpen={activeModal === 'create-list'}
-                      onClose={() => setActiveModal(null)}
-                      initialAnime={animeDetails}
-                      onSave={() => setActiveModal(null)}
-                      />
+                <CreateListModal
+                    isOpen={activeModal === 'create-list'}
+                    onClose={() => setActiveModal(null)}
+                    initialAnime={animeDetails}
+                    onSave={() => setActiveModal(null)}
+                />
             )}
 
             {showToast && (
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] bg-purple-600 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg">
-                Posted to feed ✓
+                    Posted to feed ✓
                 </div>
             )}
         </div>

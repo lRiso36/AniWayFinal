@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { getFollowers } from "../../services/followService";
 import { useNavigate } from "react-router-dom";
+import { Avatar } from "../Avatar";
+import { toastError } from "../../lib/toast";
+import { MiniLoading } from "../Loading";
 
 type FollowUser = {
     id: string;
@@ -14,10 +17,9 @@ const UserRow = ({ user, onClick }: { user: FollowUser, onClick: () => void }) =
         onClick={onClick}
         className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
     >
-        <img
-            src={user.avatar ?? ''}
-            alt={user.username}
-            className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover shrink-0"
+        <Avatar
+            avatar={user.avatar}
+            username={user.username}
         />
         <div>
             <p className="text-white text-sm sm:text-base font-medium">{user.display_name ?? user.username}</p>
@@ -33,17 +35,20 @@ export const ProfileFollowers = ({ userId }: { userId: string }) => {
 
     useEffect(() => {
         const fetch = async () => {
-            const data = await getFollowers(userId);
-            setFollowers(data);
-            setIsLoading(false);
+            try {
+                const data = await getFollowers(userId);
+                setFollowers(data);
+            } catch {
+                toastError("Unable to get follower data right now.")
+            } finally {
+                setIsLoading(false);
+            }
         }
         fetch();
     }, [userId]);
 
     if (isLoading) return (
-        <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <MiniLoading loading={isLoading} />
     )
 
     if (followers.length === 0) return (

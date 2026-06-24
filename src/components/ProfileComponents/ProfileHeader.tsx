@@ -1,5 +1,6 @@
 import type { ProfileType } from "../../types/ProfileType";
 import { useAuth } from "../../context/Authcontext";
+import { Avatar } from "../Avatar";
 
 type ProfileHeaderType = {
   profileData: ProfileType;
@@ -52,11 +53,13 @@ export const ProfileHeader = ({
             {/* avatar/name/button row */}
             <div className="flex justify-between items-start -mt-20 sm:-mt-24 relative z-10">
                 <div className="flex items-end gap-4">
-                <img
-                  src={profileData.avatar ?? ""}
-                  alt={profileData.username}
-                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-[#0a0a14] bg-[#0a0a14]"
-                />
+                  <Avatar 
+                  avatar={profileData.avatar} 
+                  username={profileData.username}
+                  size="w-22 h-22 sm:w-32 sm:h-32"
+                  textSize="text-3xl sm:text-6xl"
+                  />
+      
 
                 <div className="pb-2">
                   <p className="text-white font-bold text-xl sm:text-3xl">

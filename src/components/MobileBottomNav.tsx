@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/Authcontext";
+import { Avatar } from "./Avatar";
 
 const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -122,9 +123,11 @@ export const MobileBottomNav = ({ userAvatar, userName }: Props) => {
         bg-[#1e1e2e] border-t border-white/10
         rounded-t-2xl
         transition-transform duration-300
-        ${moreOpen ? "translate-y-0" : "translate-y-full"}
+        ${moreOpen 
+          ? "translate-y-0 visible pointer-events-auto" 
+          : "translate-y-full invisible pointer-events-none"}
       `}>
-        <div className="px-4 pt-4 pb-6 flex flex-col gap-1">
+        <div className="px-4 pt-4 pb-4 flex flex-col gap-1">
           <p className="text-white/30 text-xs uppercase tracking-wide px-2 mb-2">More</p>
           {MORE_ITEMS.map((item) => (
             <button
@@ -157,11 +160,13 @@ export const MobileBottomNav = ({ userAvatar, userName }: Props) => {
                 }`}
               >
                 {tab.id === "profile" && userAvatar ? (
-                  <img
-                    src={userAvatar}
-                    alt={userName}
-                    className={`w-6 h-6 rounded-full object-cover ${active ? "ring-2 ring-purple-400" : ""}`}
+                  <Avatar
+                  avatar={userAvatar}
+                  username={userName}
+                  size="w-6 h-6"
+                  textSize="text-xs"
                   />
+
                 ) : (
                   <span>{tab.icon}</span>
                 )}

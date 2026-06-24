@@ -2,11 +2,13 @@ import { useState, useEffect } from "react"
 import type { ReviewType } from "../../types/ReviewType";
 import { getUserReviews } from "../../services/reviewService";
 import { useNavigate } from "react-router-dom";
+import { toastError } from "../../lib/toast";
+import { MiniLoading } from "../Loading";
 
 type ProfileReviewsType = {
     userId: string;
 }
-export const ProfileReviews = ({userId}: ProfileReviewsType) => {
+export const ProfileReviews = ({ userId }: ProfileReviewsType) => {
     const [reviews, setReviews] = useState<ReviewType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -20,8 +22,8 @@ export const ProfileReviews = ({userId}: ProfileReviewsType) => {
 
         const newOffset = reset ? 0 : offset + 8;
         setOffset(newOffset);
-        
-        
+
+
         if (reset) {
             setIsLoading(true)
         } else {
@@ -29,7 +31,6 @@ export const ProfileReviews = ({userId}: ProfileReviewsType) => {
         }
 
         try {
-            console.log(userId);
             const currReviews = await getUserReviews(userId, newOffset);
             if (reset) {
                 setReviews(currReviews)
@@ -38,7 +39,7 @@ export const ProfileReviews = ({userId}: ProfileReviewsType) => {
             }
             setHasMore(currReviews.length === 8);
         } catch (error) {
-            console.error(error)
+            toastError("There was a problem getting user reviews.")
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
@@ -48,11 +49,9 @@ export const ProfileReviews = ({userId}: ProfileReviewsType) => {
     useEffect(() => {
         fetchReviews(true);
     }, [])
- 
+
     if (isLoading) return (
-        <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <MiniLoading loading={isLoading} />
     )
 
     if (reviews.length === 0) return (
@@ -82,12 +81,12 @@ export const ProfileReviews = ({userId}: ProfileReviewsType) => {
                                     {new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </p>
                             </div>
-                        {review.score && (
-                            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 shrink-0">
-                                <span className="text-yellow-400 text-xs sm:text-sm">★</span>
-                                <span className="text-white text-xs sm:text-sm font-medium">{review.score}</span>
-                            </div>
-                        )}  
+                            {review.score && (
+                                <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 shrink-0">
+                                    <span className="text-yellow-400 text-xs sm:text-sm">★</span>
+                                    <span className="text-white text-xs sm:text-sm font-medium">{review.score}</span>
+                                </div>
+                            )}
                         </div>
                         <hr className="border-white/5 my-2" />
                         <p className="text-white/60 text-xs sm:text-base leading-relaxed">{review.content}</p>

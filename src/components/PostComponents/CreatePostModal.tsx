@@ -3,6 +3,7 @@ import { getAnimebySearch } from "../../services/animeService";
 import { createPost } from "../../services/postService";
 import { logAnime, getUserAnimeStatus } from "../../services/userAnimeService";
 import { RatingSlider } from "../RatingSlider";
+import { toastError } from "../../lib/toast";
 
 type Props = {
     onClose: () => void;
@@ -47,27 +48,35 @@ export const CreatePostModal = ({ onClose, onPostCreated }: Props) => {
         const isRating = !!selectedAnime && score !== null;
 
         if (isRating) {
-            const existing = await getUserAnimeStatus(selectedAnime.anilistId);
-            await logAnime(
-                selectedAnime.anilistId,
-                existing?.status ?? 'completed',
-                existing?.current_episode ?? selectedAnime.episodes ?? 0,
-                selectedAnime.episodes ?? undefined,
-                score
-            );
+            try {
+                const existing = await getUserAnimeStatus(selectedAnime.anilistId);
+                await logAnime(
+                    selectedAnime.anilistId,
+                    existing?.status ?? 'completed',
+                    existing?.current_episode ?? selectedAnime.episodes ?? 0,
+                    selectedAnime.episodes ?? undefined,
+                    score
+                );
+            } catch {
+                toastError("Failed to add score to anime log. Try again later or log it in your 'My Anime'.")
+            }
         }
 
-        await createPost(
-            isRating ? 'rating' : 'just-because',
-            caption.trim() || null,
-            selectedAnime?.anilistId ?? undefined,
-            undefined,
-            score ?? undefined
-        );
-
-        setSubmitting(false);
-        onPostCreated();
-        onClose();
+        try {
+            await createPost(
+                isRating ? 'rating' : 'just-because',
+                caption.trim() || null,
+                selectedAnime?.anilistId ?? undefined,
+                undefined,
+                score ?? undefined
+            );
+        } catch {
+            toastError("Unable to create post. Try again later.")
+        } finally {
+            setSubmitting(false);
+            onPostCreated();
+            onClose();
+        }
     }
 
     return (

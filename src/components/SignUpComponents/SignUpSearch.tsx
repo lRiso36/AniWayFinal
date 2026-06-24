@@ -2,38 +2,43 @@ import { useState, useEffect } from "react";
 import type { AnimeType } from "../../types/AnimeType";
 import { searchAnime } from "../../cache/animeCache";
 import { SignUpAnimeCard } from "./SignUpAnimeCard";
+import { toastError } from "../../lib/toast";
 
 type onSelectType = {
     onSelect: (anime: AnimeType) => void
     selectedAnimes: AnimeType[]
 }
 
-export const AnimeSearch = ({onSelect, selectedAnimes}:onSelectType) => {
+export const AnimeSearch = ({ onSelect, selectedAnimes }: onSelectType) => {
     const [query, setQuery] = useState("");
     const [searchResults, setSearchResults] = useState<AnimeType[]>([]);
     useEffect(() => {
-        if (query.length < 3){
+        if (query.length < 3) {
             setSearchResults([]);
             return
         }
 
         const timeout = setTimeout(async () => {
-            const results = await searchAnime(query);
-            setSearchResults(results);
+            try {
+                const results = await searchAnime(query);
+                setSearchResults(results);
+            } catch {
+                toastError(`Unable to get results for ${query.trim()}. Try again later.`)
+            }
         }, 500)
 
         return () => clearTimeout(timeout);
     }, [query])
-    
+
     return (
         <div className="space-y-3">
             <div className="relative">
                 <input
-                type="text"
-                placeholder="Search anime..."
-                value={query}
-                onChange={(e) => {setQuery(e.target.value)}}
-                className="
+                    type="text"
+                    placeholder="Search anime..."
+                    value={query}
+                    onChange={(e) => { setQuery(e.target.value) }}
+                    className="
                 w-full
                 bg-zinc-900
                 border
@@ -88,8 +93,8 @@ export const AnimeSearch = ({onSelect, selectedAnimes}:onSelectType) => {
                     ))}
                 </div>
                 {query.length >= 3 && searchResults.length === 0 && (
-                        <p className="text-center text-zinc-500 text-base py-4"> No Results Found :(</p>
-                    )}
+                    <p className="text-center text-zinc-500 text-base py-4"> No Results Found :(</p>
+                )}
             </div>
         </div>
     )

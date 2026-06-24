@@ -51,7 +51,7 @@ export const ResetPassword = () => {
             await updatePassword(password);
             navigate('/login');
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || "Something went wrong, please try again");
         }
         setLoading(false);
     }

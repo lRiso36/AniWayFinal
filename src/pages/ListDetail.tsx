@@ -6,6 +6,8 @@ import { useAuth } from "../context/Authcontext";
 import { AnimeCard } from "../components/AnimeCard";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
 import { useListLike } from "../components/MyListsComponents/useListLike";
+import { toastError } from "../lib/toast";
+import { Loading } from "../components/Loading";
 
 export const ListDetail = () => {
     const { listId } = useParams();
@@ -14,13 +16,19 @@ export const ListDetail = () => {
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
 
-    const {likeCount, isLiked, handleLike} = useListLike(listId ?? '');
+    const { likeCount, isLiked, handleLike } = useListLike(listId ?? '');
 
     const fetchList = async () => {
         if (!listId) return;
-        const data = await getListById(listId);
-        setList(data);
-        setLoading(false);
+        
+        try {
+            const data = await getListById(listId);
+            setList(data);
+        } catch {
+            toastError("Unable to get list data right now. Try again later.")
+        } finally {
+            setLoading(false);
+        }
     }
 
     useEffect(() => {
@@ -30,9 +38,7 @@ export const ListDetail = () => {
     const isOwner = user?.id === list?.userId;
 
     if (loading) return (
-        <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <Loading loading={loading} />
     );
 
     if (!list) return (
@@ -48,8 +54,8 @@ export const ListDetail = () => {
                 {/* header */}
                 <div className="flex flex-col gap-3">
                     <button
-                    onClick={() => window.history.back()}
-                    className="absolute top-4 left-2 w-8 h-8 sm:left-4 sm:w-11 sm:h-11 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
+                        onClick={() => window.history.back()}
+                        className="absolute top-4 left-2 w-8 h-8 sm:left-4 sm:w-11 sm:h-11 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
                     >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
                             <path d="M19 12H5M12 5l-7 7 7 7" />
@@ -79,30 +85,31 @@ export const ListDetail = () => {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                        {!isOwner && (
+                            {!isOwner && (
                                 <button
-                                    onClick={handleLike}
-                                    className={`flex items-center gap-1.5 px-2 -mb-2 rounded-lg text-xl sm:text-3xl font-medium transition-colors border ${
-                                        isLiked
-                                        ? 'bg-pink-500/20 border-pink-500/30 text-pink-400'
-                                        : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-                                    }`}
+                                    onClick={() => {
+                                        handleLike()
+                                    }}
+                                    className={`flex items-center gap-1.5 px-2 -mb-2 rounded-lg text-xl sm:text-3xl font-medium transition-colors border ${isLiked
+                                            ? 'bg-pink-500/20 border-pink-500/30 text-pink-400'
+                                            : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                                        }`}
                                 >
                                     {isLiked ? '♥' : '♡'}
                                 </button>
-                        )}
-                        {isOwner && (
-                            <button
-                                onClick={() => setEditOpen(true)}
-                                className="shrink-0 bg-white/10 hover:bg-white/20 
+                            )}
+                            {isOwner && (
+                                <button
+                                    onClick={() => setEditOpen(true)}
+                                    className="shrink-0 bg-white/10 hover:bg-white/20 
                                 text-white text-sm sm:text-base font-medium 
                                 px-4 py-2 rounded-lg 
                                 transition-colors border 
                                 border-white/20"
-                            >
-                                Edit List
-                            </button>
-                        )}
+                                >
+                                    Edit List
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

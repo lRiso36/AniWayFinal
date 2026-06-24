@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom"
 import { getComments, addComment } from "../../services/postService"
 import { ListCard } from "../MyListsComponents/ListCard"
 import type { ListType } from "../../types/ListType"
+import { Avatar } from "../Avatar"
+import { toastError } from "../../lib/toast"
 
 type PostCardType = {
     post: PostType;
@@ -39,16 +41,31 @@ export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
 
     const handleLike = async () => {
         setIsAnimating(true);
+        const wasLiked = liked;
+        const oldLikeCount = likeCount;
         setTimeout(() => setIsAnimating(false), 300)
+
 
         if (liked) {
             setLiked(false);
             setLikeCount(prev => prev - 1);
-            await unlikePost(post.id)
+            try {
+                await unlikePost(post.id)
+            } catch {
+                toastError("Error unliking post. Try again later.")
+                setLiked(wasLiked);
+                setLikeCount(oldLikeCount);
+            }
         } else {
             setLiked(true);
             setLikeCount(prev => prev + 1);
-            await likePost(post.id)
+            try {
+                await likePost(post.id)
+            } catch {
+                toastError("Error liking post. Try again later.")
+                setLiked(wasLiked);
+                setLikeCount(oldLikeCount);
+            }
         }
     }
 
@@ -60,20 +77,39 @@ export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
         setCommentsOpen(true);
         if (comments.length > 0) return; // already loaded
         setCommentsLoading(true);
-        const data = await getComments(post.id);
-        setComments(data);
-        setCommentsLoading(false);
+
+        try {
+            const data = await getComments(post.id);
+            setComments(data);
+        } catch {
+            toastError("Unable to laod comments for this post. Try again later.")
+        } finally {
+            setCommentsLoading(false)
+        }
     }
 
     const handleAddComment = async () => {
         if (!newComment.trim() || submitting) return;
         setSubmitting(true);
-        await addComment(post.id, newComment.trim());
-        const data = await getComments(post.id);
-        setComments(data);
-        setCommentCount(prev => prev + 1);
-        setNewComment('');
-        setSubmitting(false);
+
+        try {
+            await addComment(post.id, newComment.trim());
+        } catch {
+            toastError("Unable to add comment. Try again later.")
+            return;
+        }
+        try {
+            const data = await getComments(post.id);
+            setComments(data);
+            setCommentCount(prev => prev + 1);
+            setNewComment('');
+        } catch {
+            toastError("Comment was added but unable to load. Refresh page.")
+            setCommentCount(prev => prev + 1);
+            setNewComment('')
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     return (
@@ -85,10 +121,9 @@ export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
                     className="flex items-center gap-2.5 cursor-pointer"
                     onClick={() => navigate(`/profile/${post.userInfo.username}`)}
                 >
-                    <img
-                        src={post.userInfo.avatar ?? ''}
-                        alt={post.userInfo.username}
-                        className="w-10 h-10 rounded-full object-cover shrink-0"
+                    <Avatar
+                        avatar={post.userInfo.avatar}
+                        username={post.userInfo.username}
                     />
                     <div>
                         <p className="text-white text-sm font-semibold leading-tight">
@@ -210,11 +245,13 @@ export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
                         <div className="flex flex-col gap-3">
                             {comments.map((comment: any) => (
                                 <div key={comment.id} className="flex gap-2.5">
-                                    <img
-                                        src={comment.userInfo?.avatar ?? ''}
-                                        alt={comment.userInfo?.username}
-                                        className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5"
-                                    />
+                                    <div className="mt-0.5">
+                                        <Avatar
+                                            avatar={comment.userInfo?.avatar}
+                                            username={comment.userInfo?.username}
+                                            size="w-7 h-7"
+                                        />
+                                    </div>
                                     <div>
                                         <p className="text-white text-xs font-semibold">{comment.userInfo?.display_name ?? comment.userInfo?.username}</p>
                                         <p className="text-white/60 text-xs leading-relaxed">{comment.content}</p>

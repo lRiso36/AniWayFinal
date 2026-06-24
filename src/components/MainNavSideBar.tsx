@@ -1,5 +1,6 @@
 // NEED USERNAME AND IFNO AND STUFF FROM DATABASE
 import { useEffect, useState } from "react";
+import { Avatar } from "./Avatar";
 
 type NavItem = {
   id: string;
@@ -116,32 +117,32 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 
-export const MainNavSideBar = ({selected:externalSelected, onSelect, userName, userAvatar}:MainNavSideBarType) => {
-    // internal is for when no external is passed or interal is controlling it
-    const [internalSelected, setInternalSelected] = useState("home")
-    // if no external, set to internal 
-    const selected = externalSelected ?? internalSelected;
-    // only true when screen is not large or greater, allows you to collapse window
-    const [manualExpanded, setManualExpanded] = useState(false);
-    const [isLarge, setIsLarge] = useState(window.innerWidth >= 1024);
+export const MainNavSideBar = ({ selected: externalSelected, onSelect, userName, userAvatar }: MainNavSideBarType) => {
+  // internal is for when no external is passed or interal is controlling it
+  const [internalSelected, setInternalSelected] = useState("home")
+  // if no external, set to internal 
+  const selected = externalSelected ?? internalSelected;
+  // only true when screen is not large or greater, allows you to collapse window
+  const [manualExpanded, setManualExpanded] = useState(false);
+  const [isLarge, setIsLarge] = useState(window.innerWidth >= 1024);
 
-    // everytime you resize, check if its >= large so you can control manual expand
-    useEffect(() => {
-        const handleResize = () => setIsLarge(window.innerWidth >= 1024);
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, [])
-    
-    const expanded = isLarge || manualExpanded
+  // everytime you resize, check if its >= large so you can control manual expand
+  useEffect(() => {
+    const handleResize = () => setIsLarge(window.innerWidth >= 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [])
 
-    // on select set id and naviagte to id (navigate being passed from external APPLAYOUT)
-    const handleSelect = (id: string) => {
-        setInternalSelected(id);
-        onSelect?.(id);
-    }
+  const expanded = isLarge || manualExpanded
 
-    return (
-        <nav className={`
+  // on select set id and naviagte to id (navigate being passed from external APPLAYOUT)
+  const handleSelect = (id: string) => {
+    setInternalSelected(id);
+    onSelect?.(id);
+  }
+
+  return (
+    <nav className={`
             ${expanded ? "w-[200px]" : "w-[60px]"}
             w-[60px] lg:w-[200px] 
             min-h-screen 
@@ -154,10 +155,10 @@ export const MainNavSideBar = ({selected:externalSelected, onSelect, userName, u
             transition-all
             duration-300
             `}>
-            {/* toggle, if not large, allow toggle for manual expand */}
-            <div 
-            onClick={() => {if (!isLarge) setManualExpanded(!manualExpanded) }}
-            className="
+      {/* toggle, if not large, allow toggle for manual expand */}
+      <div
+        onClick={() => { if (!isLarge) setManualExpanded(!manualExpanded) }}
+        className="
             relative
             group
             flex 
@@ -169,38 +170,38 @@ export const MainNavSideBar = ({selected:externalSelected, onSelect, userName, u
             hover:bg-white/5 
             transition-colors
             ">
-                <span className="shrink-0"><AniWayLogo/></span>
-                {expanded && 
-                <span className="
+        <span className="shrink-0"><AniWayLogo /></span>
+        {expanded &&
+          <span className="
                 text-white 
                 text-lg 
                 font-bold
                 ">AniWay</span>}
-                {!expanded && (
-                    <div className=" 
+        {!expanded && (
+          <div className=" 
                     absolute left-full top-1/2 -translate-y-1/2 ml-2
                     bg-[#1e1e2e] text-white text-xs px-2 py-1 rounded
                     whitespace-nowrap pointer-events-none
                     opacity-0 group-hover:opacity-100
                     transition-opacity duration-150 z-[100]">
-                    Expand
-                    </div>
-                )}
-            </div>
-            {/* nav items */}
-            <ul className="
+            Expand
+          </div>
+        )}
+      </div>
+      {/* nav items */}
+      <ul className="
             flex 
             flex-col 
             gap-0.5 
             px-2 
             flex-1">
-                {NAV_ITEMS.map((item) => {
-                    const isActive = selected === item.id
-                    return (
-                        <li key={item.id} className="relative group">
-                            <button
-                            onClick={() =>handleSelect(item.id)}
-                            className={`
+        {NAV_ITEMS.map((item) => {
+          const isActive = selected === item.id
+          return (
+            <li key={item.id} className="relative group">
+              <button
+                onClick={() => handleSelect(item.id)}
+                className={`
                                 w-full 
                                 flex 
                                 items-center 
@@ -212,32 +213,32 @@ export const MainNavSideBar = ({selected:externalSelected, onSelect, userName, u
                                 transition-colors 
                                 cursor-pointer
                                 ${isActive
-                                ? "bg-purple-600/20 text-purple-400 font-semibold"
-                                : "text-white/50 hover:bg-white/5 hover:text-white/80"
-                                }`}
-                                >
-                                <span className="shrink-0">{item.icon}</span>
-                                {expanded && (<span className="">{item.label}</span>)}
-                            </button>
+                    ? "bg-purple-600/20 text-purple-400 font-semibold"
+                    : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                  }`}
+              >
+                <span className="shrink-0">{item.icon}</span>
+                {expanded && (<span className="">{item.label}</span>)}
+              </button>
 
-                            {!expanded && (
-                            <div className="
+              {!expanded && (
+                <div className="
                             absolute left-full top-1/2 -translate-y-1/2 ml-2
                             bg-[#1e1e2e] text-white text-xs px-2 py-1 rounded
                             whitespace-nowrap pointer-events-none
                             opacity-0 group-hover:opacity-100
                             transition-opacity duration-150 z-[100]">
-                            {item.label}
-                            </div>
-                            )}
-                        </li>
-                    )
-                })}
-            </ul>
-            {/* user card on bottom */}
-            <div
-                onClick={() => handleSelect("profile")}
-                className="
+                  {item.label}
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+      {/* user card on bottom */}
+      <div
+        onClick={() => handleSelect("profile")}
+        className="
                 flex 
                 items-center 
                 gap-2.5 
@@ -250,19 +251,19 @@ export const MainNavSideBar = ({selected:externalSelected, onSelect, userName, u
                 transition-colors
                 overflow-hidden
                 "
-                >
-                <img 
-                src={userAvatar ?? undefined} 
-                alt={userName}
-                className="w-8 h-8 rounded-full object-cover shrink-0"
-                />
-                {/* ADD USERNAME INFO AND SHIT FROM DATABSE*/}
-                {expanded && (<div className="">
-                    <p className="text-white/85 text-[13px] font-medium truncate">{userName}</p>
-                    <p className="text-white/35 text-[11px]">View profile</p>
-                </div>
-              )} 
-              </div>
+      >
+        <Avatar
+          avatar={userAvatar}
+          username={userName}
+          size="w-9 h-9"
+        />
+        {/* ADD USERNAME INFO AND SHIT FROM DATABSE*/}
+        {expanded && (<div className="">
+          <p className="text-white/85 text-[13px] font-medium truncate">{userName}</p>
+          <p className="text-white/35 text-[11px]">View profile</p>
+        </div>
+        )}
+      </div>
     </nav>
-    )
+  )
 }

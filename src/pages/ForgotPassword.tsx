@@ -12,15 +12,18 @@ export const ForgotPassword = () => {
 
     const handleSubmit = async () => {
         if (!email.trim()) return;
+
         setLoading(true);
         setError('');
+
         try {
             await forgotPassword(email.trim());
             setSent(true);
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || "Unable to send email right now. Try again later.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }
 
     return (

@@ -1,11 +1,12 @@
-import { useState} from "react";
+import { useState } from "react";
 import type { AnimeType } from "../types/AnimeType";
-import {useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { SignUpStepOne } from "../components/SignUpComponents/SignUpStepOne";
 import { SignUpContainer } from "../components/SignUpComponents/SignUpContainer";
 import { SignUpStepThree } from "../components/SignUpComponents/SignUpStepThree";
 import { SignUpStepTwo } from "../components/SignUpComponents/SignUpStepTwo";
 import { signUp } from "../services/authServices";
+import { toastError } from "../lib/toast";
 
 export const SignUp = () => {
     const navigate = useNavigate()
@@ -24,7 +25,7 @@ export const SignUp = () => {
     });
     const [agreed, setAgreed] = useState(false);
     const [loading, setLoading] = useState(false);
-    
+
 
     // variable functions
     const nextStep = async () => {
@@ -32,7 +33,6 @@ export const SignUp = () => {
 
         if (step === 3) {
             try {
-                console.log("FINAL FAVORITES", formData.favorites);
                 await signUp(
                     formData.username,
                     formData.email,
@@ -46,12 +46,12 @@ export const SignUp = () => {
                 setStep(4)
 
                 setTimeout(() => {
-                navigate("/login")
-             }, 2000)
+                    navigate("/home")
+                }, 2000)
 
-            }catch (error:any) {
-                console.error(error.message);
-                alert(error.message || "Failed to create account");
+            } catch (error: any) {
+                console.error('Full error:', error); // see exactly what's failing
+                toastError(error.message || "Failed to create account");
             } finally {
                 setLoading(false)
             }
@@ -60,7 +60,7 @@ export const SignUp = () => {
         }
     }
     const prevStep = () => setStep(prev => prev - 1);
-    
+
     const stepContent: Record<number, { title: string; subtitle: string }> = {
         1: { title: "Begin Your Adventure", subtitle: "Join the community of anime explorers today" },
         2: { title: "Build Your Profile", subtitle: "Tell the community about yourself" },
@@ -69,42 +69,42 @@ export const SignUp = () => {
     }
 
     return (
-            <SignUpContainer 
-            title={stepContent[step].title} 
-            subtitle={stepContent[step].subtitle} 
+        <SignUpContainer
+            title={stepContent[step].title}
+            subtitle={stepContent[step].subtitle}
             step={step}>
             {step === 1 && (
                 <SignUpStepOne
-                formData={formData}
-                setFormData={setFormData}
-                agreed={agreed}
-                setAgreed={setAgreed}
-                nextStep={nextStep}
-            />
+                    formData={formData}
+                    setFormData={setFormData}
+                    agreed={agreed}
+                    setAgreed={setAgreed}
+                    nextStep={nextStep}
+                />
             )}
             {step === 2 && (
                 <SignUpStepTwo
-                formData={formData}
-                setFormData={setFormData}
-                nextStep={nextStep}
-                prevStep={prevStep}
+                    formData={formData}
+                    setFormData={setFormData}
+                    nextStep={nextStep}
+                    prevStep={prevStep}
                 />
             )}
             {step === 3 && (
                 <SignUpStepThree
-                formData={formData}
-                setFormData={setFormData}
-                nextStep={nextStep}
-                prevStep={prevStep}
+                    formData={formData}
+                    setFormData={setFormData}
+                    nextStep={nextStep}
+                    prevStep={prevStep}
                 />
             )}
             {step === 4 && (
                 <div className="flex flex-col items-center justify-center space-y-3 py-10">
                     <p className="text-4xl">🎉</p>
                     <h2 className="text-white text-xl font-semibold">Welcome to AniWay!</h2>
-                    <p className="text-zinc-400 text-sm">Taking you to login...</p>
+                    <p className="text-zinc-400 text-sm">Taking you to the home page...</p>
                 </div>
             )}
-            </SignUpContainer>
-        )
+        </SignUpContainer>
+    )
 }

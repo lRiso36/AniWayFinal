@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { getAnimeReviews } from "../services/reviewService";
 import type { AnimeReviewType } from "../types/ReviewType";
+import { Avatar } from "./Avatar";
 
 
 type Props = {
@@ -62,10 +63,9 @@ export const AnimeReviews = ({ animeId }: Props) => {
                     className="bg-[#12121f] border border-white/8 rounded-2xl p-4 flex flex-col gap-2.5"
                 >
                     <div className="flex items-center gap-2.5">
-                        <img
-                            src={review.user.avatar ?? ''}
-                            alt={review.user.username}
-                            className="w-8 h-8 sm:h-10 sm:w-10 rounded-full object-cover shrink-0"
+                        <Avatar
+                        avatar={review.user.avatar}
+                        username={review.user.username}
                         />
                         <div>
                             <p className="text-white text-sm sm:text-base font-medium leading-tight">

@@ -1,6 +1,8 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { searchUsers } from "../services/followService";
+import { toastError } from "../lib/toast";
+import { Avatar } from "../components/Avatar";
 
 const RECENTS_KEY = "recentMemberSearches";
 const MAX_RECENTS = 8;
@@ -18,7 +20,7 @@ export const Members = () => {
     const [loading, setLoading] = useState(false);
     const [recents, setRecents] = useState<SearchUser[]>([]);
     const navigate = useNavigate();
-    
+
 
     useEffect(() => {
         const stored = localStorage.getItem(RECENTS_KEY);
@@ -27,6 +29,7 @@ export const Members = () => {
                 setRecents(JSON.parse(stored));
             } catch {
                 setRecents([]);
+                toastError("Unable to get recent searches")
             }
         }
     }, []);
@@ -41,18 +44,25 @@ export const Members = () => {
         setLoading(true);
 
         const timer = setTimeout(async () => {
-            const data = await searchUsers(query.trim());
-            setResults(data ?? []);
-            setLoading(false);
+            try {
+                const data = await searchUsers(query.trim());
+                setResults(data ?? []);
+            } catch {
+                toastError("Unable to search users at this time. Please try again later.")
+            } finally {
+                setLoading(false);
+            }
         }, 300)
 
         return () => clearTimeout(timer);
     }, [query]);
 
     const handleSelect = (user: SearchUser) => {
+        //add to recents
         const updated = [user, ...recents.filter(u => u.id !== user.id)].slice(0, MAX_RECENTS);
         setRecents(updated);
         localStorage.setItem(RECENTS_KEY, JSON.stringify(updated));
+
         navigate(`/profile/${user.username}`);
     }
 
@@ -70,7 +80,7 @@ export const Members = () => {
                 {/* search bar */}
                 <div className="flex items-center gap-2 bg-[#12121f] border border-white/10 rounded-xl px-4 py-3">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30 shrink-0 sm:w-5 sm:h-5">
-                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                     </svg>
                     <input
                         type="text"
@@ -129,10 +139,9 @@ const UserRow = ({ user, onClick }: { user: SearchUser, onClick: () => void }) =
         onClick={onClick}
         className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
     >
-        <img
-            src={user.avatar ?? ''}
-            alt={user.username}
-            className="w-10 h-10 rounded-full object-cover shrink-0"
+        <Avatar
+            avatar={user.avatar}
+            username={user.username}
         />
         <div className="min-w-0">
             <p className="text-white text-sm sm:text-base font-medium line-clamp-1">{user.display_name ?? user.username}</p>

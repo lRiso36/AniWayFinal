@@ -2,33 +2,38 @@ import { useState, useEffect } from "react";
 import { getLikedLists, getUserLists } from "../../services/userListsService";
 import type { ListType } from "../../types/ListType";
 import { ListsContainer } from "../MyListsComponents/ListContainer";
+import { toastError } from "../../lib/toast";
+import { MiniLoading } from "../Loading";
 
 type ProfileListsType = {
     userId: string;
 }
 
-export const ProfileLists = ({userId}: ProfileListsType) => {
+export const ProfileLists = ({ userId }: ProfileListsType) => {
     const [lists, setLists] = useState<ListType[]>([]);
     const [likedLists, setLikedLists] = useState<ListType[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     useEffect(() => {
         const fetchAll = async () => {
-            const [owned, liked] = await Promise.all([
-                getUserLists(userId), 
-                getLikedLists(userId),
-            ]);
-            setLists(owned ?? []);
-            setLikedLists(liked ?? []);
-            setLoading(false);
+            try {
+                const [owned, liked] = await Promise.all([
+                    getUserLists(userId),
+                    getLikedLists(userId),
+                ]);
+                setLists(owned ?? []);
+                setLikedLists(liked ?? []);
+            } catch {
+                toastError("Unable to get user list data. Try again later.")
+            } finally {
+                setLoading(false);
+            }
         }
         fetchAll();
-    },[userId]);
+    }, [userId]);
 
     if (loading) return (
-        <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <MiniLoading loading={loading} />
     )
 
     const allLists = [...lists, ...likedLists];
@@ -39,7 +44,7 @@ export const ProfileLists = ({userId}: ProfileListsType) => {
 
     return (
         <div className="px-0.5 sm:px-4">
-        <ListsContainer lists={allLists} />
+            <ListsContainer lists={allLists} />
         </div>
     );
 }

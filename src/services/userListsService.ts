@@ -180,7 +180,7 @@ export const getListLikeCount = async (listId: string) => {
 
     try {
         const response = await fetch(`${API_URL}/lists/like/${listId}`, options);
-        if (!response.ok) return 0;
+        if (!response.ok) throw new Error('Failed to get like count');
         const data = await response.json();
         return data.count;
     } catch (error) {

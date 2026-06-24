@@ -24,62 +24,87 @@ type SignUpSTepOneType = {
         displayName: string;
         bio: string;
         genre: string[];
-       favorites: AnimeType[]
+        favorites: AnimeType[]
     }>>;
     agreed: boolean;
     setAgreed: React.Dispatch<React.SetStateAction<boolean>>;
     nextStep: () => void;
 }
 
-export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextStep}: SignUpSTepOneType) => {
+export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextStep }: SignUpSTepOneType) => {
     // checks and balances fr
-    const passwordsMatch = 
+    const passwordsMatch =
         formData.password === formData.confirmPassword;
-    const passwordsFilled = 
+    const passwordsFilled =
         formData.password.length > 0 &&
         formData.confirmPassword.length > 0;
-    const passwordLengthValid = formData.password.length >= 8 ;
+    const passwordLengthValid = formData.password.length >= 8;
     const passwordHasNumber = /\d/.test(formData.password);
     const passwordHasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password);
     const validPassword = passwordLengthValid && passwordHasSpecialChar && passwordHasNumber;
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+    const usernameValid = formData.username.length >= 3 &&
+        formData.username.length <= 20 &&
+        /^[a-zA-Z0-9_]+$/.test(formData.username);
+
     const [usernameError, setUsernameError] = useState('');
     const [emailError, setEmailError] = useState('');
-    const approved = 
-            passwordsMatch
-            && validPassword
-            && emailValid 
-            && agreed
-            && !usernameError
-            && !emailError;
+    const approved =
+        passwordsMatch
+        && validPassword
+        && emailValid
+        && agreed
+        && !usernameError
+        && !emailError
+        && usernameValid
+        ;
 
     useEffect(() => {
-        if (!formData.username) return;
-        const username = formData.username;
+        if (!formData.username) {
+            setUsernameError('');
+            return;
+        }
+        if (formData.username.length < 3) {
+            setUsernameError('Username must be at least 3 characters');
+            return;
+        }
+        if (formData.username.length > 20) {
+            setUsernameError('Username must be under 20 characters');
+            return;
+        }
+        if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+            setUsernameError('Username can only contain letters, numbers and underscores');
+            return;
+        }
 
         const timer = setTimeout(async () => {
-            const availableUsername = await checkUsernameAvailable(username);
-            if (!availableUsername) {
-                setUsernameError(`Username is already taken`);
-            } else {
+            try {
+                const available = await checkUsernameAvailable(formData.username);
+                if (!available) setUsernameError('Username is already taken');
+                else setUsernameError('');
+            } catch {
                 setUsernameError('');
-            } //end of if else
+            }
         }, 300);
 
         return () => clearTimeout(timer);
     }, [formData.username]);
 
     useEffect(() => {
-        if (!formData.email) return;
+        if (!formData.email) {
+            setEmailError('');
+            return;
+        }
+        
         const email = formData.email;
 
         const timer = setTimeout(async () => {
-            const availableEmail = await checkEmailAvailable(email);
-            console.log('available', availableEmail)
-            if (!availableEmail) {
-                setEmailError('Email already used for an account');
-            } else {
-                setEmailError('')
+            try {
+                const availableEmail = await checkEmailAvailable(email);
+                if (!availableEmail) setEmailError('Email already used for an account');
+                else setEmailError('');
+            } catch {
+                setEmailError('');
             }
         }, 300)
 
@@ -100,9 +125,9 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                 {/* username */}
                 <label className="text-sm text-zinc-400">Username <span className="text-purple-500">*</span></label>
                 {usernameError && (
-                            <p className="text-red-400 text-sm mt-1">
-                                {usernameError}
-                            </p>
+                    <p className="text-red-400 text-sm mt-1">
+                        {usernameError}
+                    </p>
                 )}
                 <input
                     type="text"
@@ -125,29 +150,29 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                     transition
                     "
                     value={formData.username}
-                    onChange={(e) => 
-                    setFormData(prev => ({
-                        ...prev, username: e.target.value
-                    }))}
+                    onChange={(e) =>
+                        setFormData(prev => ({
+                            ...prev, username: e.target.value
+                        }))}
                 />
-                </div>
-                {/* email */}
-                <div className="space-y-1">
-                    {formData.email.length > 0 && !emailValid && (
-                        <p className="text-red-400 text-xs mt-2">
-                            Please enter a valid email address
-                        </p>
-                    )}
-                    {emailError && (
-                            <p className="text-red-400 text-sm mt-1">
-                                {emailError}
-                            </p>
-                    )}
-                    <label className="text-sm text-zinc-400">Email <span className="text-purple-500">*</span></label>
-                    <input
-                        type="email"
-                        placeholder="explorere@domain.com"
-                        className="
+            </div>
+            {/* email */}
+            <div className="space-y-1">
+                {formData.email.length > 0 && !emailValid && (
+                    <p className="text-red-400 text-xs mt-2">
+                        Please enter a valid email address
+                    </p>
+                )}
+                {emailError && (
+                    <p className="text-red-400 text-sm mt-1">
+                        {emailError}
+                    </p>
+                )}
+                <label className="text-sm text-zinc-400">Email <span className="text-purple-500">*</span></label>
+                <input
+                    type="email"
+                    placeholder="explorere@domain.com"
+                    className="
                         w-full 
                         bg-zinc-900 
                         border 
@@ -164,21 +189,21 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                         focus:border-purple-500/60
                         transition
                         "
-                        value={formData.email}
-                        onChange={(e) => 
-                            setFormData(prev => ({
-                                ...prev, email: e.target.value
-                            }))
-                        }
-                    />
-                </div>
-                {/* password */}
-                <div className="space-y-1">
-                    <label className="text-sm text-zinc-400">Password <span className="text-purple-500">*</span></label>
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        className="
+                    value={formData.email}
+                    onChange={(e) =>
+                        setFormData(prev => ({
+                            ...prev, email: e.target.value
+                        }))
+                    }
+                />
+            </div>
+            {/* password */}
+            <div className="space-y-1">
+                <label className="text-sm text-zinc-400">Password <span className="text-purple-500">*</span></label>
+                <input
+                    type="password"
+                    placeholder="Password"
+                    className="
                         w-full 
                         bg-zinc-900 
                         border 
@@ -195,41 +220,41 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                         focus:border-purple-500/60
                         transition
                         "
-                        value={formData.password}
-                        onChange={(e) => 
-                            setFormData(prev => ({
+                    value={formData.password}
+                    onChange={(e) =>
+                        setFormData(prev => ({
                             ...prev, password: e.target.value
-                            }))
-                        }
-                    />
-                    <div className="
+                        }))
+                    }
+                />
+                <div className="
                     mt-2
                     space-y-1
                     text-xs
                     ">
-                        <p className={passwordLengthValid ? "text-green-400" : "text-zinc-500"}>
-                             • At least 8 characters 
-                        </p>
-                        <p className={passwordHasNumber ? "text-green-400" : "text-zinc-500"}>
-                            • Contains a number
-                        </p>
-                        <p className={passwordHasSpecialChar ? "text-green-400" : "text-zinc-500"}>
-                            • Contains a special character
-                        </p>
-                        </div>
-                   </div>
-                    {/* confirm password */}
-                    <div className="space-y-1">
-                        {passwordsFilled && !passwordsMatch && (
-                            <p className="text-red-400 text-sm mt-1">
-                                Passwords do not match
-                            </p>
-                        )}
-                        <label className="text-sm text-zinc-400">Confirm Password <span className="text-purple-500">*</span></label>
-                        <input
-                            type="password"
-                            placeholder="Repeat your password"
-                            className="
+                    <p className={passwordLengthValid ? "text-green-400" : "text-zinc-500"}>
+                        • At least 8 characters
+                    </p>
+                    <p className={passwordHasNumber ? "text-green-400" : "text-zinc-500"}>
+                        • Contains a number
+                    </p>
+                    <p className={passwordHasSpecialChar ? "text-green-400" : "text-zinc-500"}>
+                        • Contains a special character
+                    </p>
+                </div>
+            </div>
+            {/* confirm password */}
+            <div className="space-y-1">
+                {passwordsFilled && !passwordsMatch && (
+                    <p className="text-red-400 text-sm mt-1">
+                        Passwords do not match
+                    </p>
+                )}
+                <label className="text-sm text-zinc-400">Confirm Password <span className="text-purple-500">*</span></label>
+                <input
+                    type="password"
+                    placeholder="Repeat your password"
+                    className="
                             w-full 
                             bg-zinc-900 
                             border 
@@ -246,38 +271,39 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                             focus:border-purple-500/60
                             transition
                             "
-                            value={formData.confirmPassword}
-                            onChange={(e) => 
-                                setFormData(prev => ({
-                                    ...prev, confirmPassword: e.target.value
-                                }))
-                            }
-                        />
-                    </div>
+                    value={formData.confirmPassword}
+                    onChange={(e) =>
+                        setFormData(prev => ({
+                            ...prev, confirmPassword: e.target.value
+                        }))
+                    }
+                />
+            </div>
 
-                    {/* checkbox */}
-                    <div className="flex items-center gap-2 mt-5">
-                        <input
-                            type="checkbox"
-                            id="agree"
-                            className="accent-purple-500 shrink-0"
-                            onChange={(e) => 
-                                setAgreed(e.target.checked)
-                            }
-                            />
-                        <label 
-                            htmlFor="agree" 
-                            className="text-xs sm:text-base text-zinc-500 leading-relaxed">
-                            I agree to the
-                            <span className="text-purple-400 cursor-pointer hover:underline"> 
-                            Terms of Service</span>
-                        </label>
-                    </div>
+            {/* checkbox */}
+            <div className="flex items-center gap-2 mt-5">
+                <input
+                    type="checkbox"
+                    id="agree"
+                    checked={agreed}
+                    className="accent-purple-500 shrink-0"
+                    onChange={(e) =>
+                        setAgreed(e.target.checked)
+                    }
+                />
+                <label
+                    htmlFor="agree"
+                    className="text-xs sm:text-base text-zinc-500 leading-relaxed">
+                    I agree to the
+                    <span className="text-purple-400 cursor-pointer hover:underline">
+                        Terms of Service</span>
+                </label>
+            </div>
 
-                    {/* ADD FORGOT PASSWORD STUFF */}
-                    {/* button */}
-                    <button
-                        className="
+            {/* ADD FORGOT PASSWORD STUFF */}
+            {/* button */}
+            <button
+                className="
                         w-full 
                         py-3 
                         sm:py-4
@@ -288,18 +314,18 @@ export const SignUpStepOne = ({formData, setFormData, agreed, setAgreed, nextSte
                         sm:text-base
                         mt-4 
                         transition"
-                       style={{
-                        background: approved 
-                        ? "#9333ea" 
+                style={{
+                    background: approved
+                        ? "#9333ea"
                         : "rgba(147,51,234,0.3)"
-                        }}
-                        onClick={handleSubmit}
-                        disabled={!(
-                        approved
-                        )}
-                        >
-                        Create Account
-                    </button>
-                    </div>
+                }}
+                onClick={handleSubmit}
+                disabled={!(
+                    approved
+                )}
+            >
+                Create Account
+            </button>
+        </div>
     )
 }

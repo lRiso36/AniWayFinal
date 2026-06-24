@@ -1,94 +1,119 @@
 import supabase from '../supabase';
 import type { AnimeType } from '../types/AnimeType';
+import { API_URL } from '../config/api';
 
-export const logIn = async (email:string, password:string) => {
-    const {data, error} = await supabase.auth.signInWithPassword({ email, password});
+export const logIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
 }
 
 export const signUp = async (
-    username: string, 
-    email:string, 
-    password: string, 
-    avatar:string, 
-    displayName: string, 
-    bio:string, 
-    genres: string[], 
+    username: string,
+    email: string,
+    password: string,
+    avatar: string,
+    displayName: string,
+    bio: string,
+    genres: string[],
     favorites: AnimeType[]
 ) => {
-    const {data, error} = await supabase.auth.signUp({email, password});
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
     if (error) throw error;
     if (!data.user) throw new Error('Signup failed');
-    
-    const {error: userError} = await supabase
-    .from('users')
-    .insert({
-        id: data.user.id,
-        username: username,
-        display_name: displayName,
-        avatar,
-        bio,
-        email: email
-    });
-    if (userError) throw userError;
 
-    //insert genres into genre table
-    if (genres.length > 0) {
-        const genreRows = genres.map((genre) => ({
-            user_id: data.user!.id,
-            genre: genre,
-        }));
+    try {
+        const { error: userError } = await supabase
+            .from('users')
+            .insert({
+                id: data.user.id,
+                username: username,
+                display_name: displayName,
+                avatar,
+                bio,
+                email: email
+            });
+        console.log('Step 2 result:', userError)
+        if (userError) throw userError;
 
-        const {error: genreError} = await supabase
-        .from('user_favorite_genres')
-        .insert(genreRows);
+        //insert genres into genre table
+        if (genres.length > 0) {
+            const genreRows = genres.map((genre) => ({
+                user_id: data.user!.id,
+                genre: genre,
+            }));
 
-        if (genreError) throw genreError;
-    }
+            const { error: genreError } = await supabase
+                .from('user_favorite_genres')
+                .insert(genreRows);
 
-    if (favorites.length > 0) {
-        const animeRows = favorites.map((anime) => ({
-            anilist_id: anime.anilistId,
-            mal_id: anime.idMal,
-            title_english: anime.title.english,
-            title_romaji: anime.title.romaji,
-            cover_large: anime.coverImage.large,
-            cover_extra_large: anime.coverImage.extraLarge,
-            banner_image: anime.bannerImage,
-            year: anime.year,
-            episodes: anime.episodes,
-            description: anime.description,
-            cached_at: new Date().toISOString(),
-        }));
+            if (genreError) throw genreError;
+        }
 
-        const { error: animeError } = await supabase
-        .from('anime')
-        .upsert(animeRows, { onConflict: 'anilist_id'});
+        if (favorites.length > 0) {
+            const animeRows = favorites.map((anime) => ({
+                anilist_id: anime.anilistId,
+                mal_id: anime.idMal,
+                title_english: anime.title.english,
+                title_romaji: anime.title.romaji,
+                cover_large: anime.coverImage.large,
+                cover_extra_large: anime.coverImage.extraLarge,
+                banner_image: anime.bannerImage,
+                year: anime.year,
+                episodes: anime.episodes,
+                description: anime.description,
+                cached_at: new Date().toISOString(),
+            }));
 
-        if (animeError) {
-            throw animeError
-        };
+            const { error: animeError } = await supabase
+                .from('anime')
+                .upsert(animeRows, { onConflict: 'anilist_id' });
 
-        const favoriteRows = favorites.map((anime) => ({
-            user_id: data.user!.id,
-            anilist_id: anime.anilistId,
-            status: 'completed',
-            is_favorite: true,
-            current_episode: anime.episodes ?? 0,
-        }));
+            if (animeError) {
+                throw animeError
+            };
 
-        const {error:favoritesError} = await supabase
-        .from('user_anime')
-        .insert(favoriteRows);
+            const favoriteRows = favorites.map((anime) => ({
+                user_id: data.user!.id,
+                anilist_id: anime.anilistId,
+                status: 'completed',
+                is_favorite: true,
+                current_episode: anime.episodes ?? 0,
+            }));
 
-        if (favoritesError) {
-            console.error(favoritesError);
-            throw favoritesError
-        };
-    }
+            const { error: favoritesError } = await supabase
+                .from('user_anime')
+                .insert(favoriteRows);
+
+            if (favoritesError) {
+                console.error(favoritesError);
+                throw favoritesError
+            };
+        }
         return data;
+    } catch (insertError: any) {
+        try {
+            console.log('attempting cleanup');
+            const cleanupResponse = await fetch(`${API_URL}/auth/cleanup`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${data.session?.access_token}`
+                }
+            });
+            console.log('cleanup response:', cleanupResponse.status);
+        } catch (cleanupError) {
+            console.error('cleanup failed:', cleanupError);
+        }
+
+        try {
+            await supabase.from('users').delete().eq('id', data.user.id);
+        } catch {
+            console.error('user delete failed')
+        }
+        throw new Error('Failed to set up your account. Please try again.')
     }
+}
 
 export const checkUsernameAvailable = async (username: string): Promise<boolean> => {
     const { data } = await supabase
@@ -100,12 +125,12 @@ export const checkUsernameAvailable = async (username: string): Promise<boolean>
     return !data; // if no data found, username is available
 }
 
-export const checkEmailAvailable = async (email:string) => {
-    const {data, error} = await supabase
-    .from("users")
-    .select("email")
-    .eq("email", email)
-    .maybeSingle();
+export const checkEmailAvailable = async (email: string) => {
+    const { data, error } = await supabase
+        .from("users")
+        .select("email")
+        .eq("email", email)
+        .maybeSingle();
 
     if (error) throw error;
 

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { ProfileType } from "../../types/ProfileType";
 import { updateProfile } from "../../services/profileService";
+import { Avatar } from "../Avatar";
+import { useAuth } from "../../context/Authcontext";
+import { toastSuccess } from "../../lib/toast";
 
 const AVATAR_COUNT = 44;
 const avatars = Array.from({ length: AVATAR_COUNT }, (_, i) => `/animeAvatars/avatar${i + 1}.png`);
@@ -13,6 +16,7 @@ type Props = {
 }
 
 export const EditProfileModal = ({ isOpen, onClose, profileData, onSave }: Props) => {
+    const { username, refreshProfile } = useAuth();
     const [displayName, setDisplayName] = useState(profileData.display_name);
     const [bio, setBio] = useState(profileData.bio ?? '');
     const [avatar, setAvatar] = useState(profileData.avatar ?? '');
@@ -26,12 +30,11 @@ export const EditProfileModal = ({ isOpen, onClose, profileData, onSave }: Props
             setError('Display name is required');
             return;
         }
-        if (!avatar.trim()) {
-            setError('Avatar is required');
-            return;
-        }
         setSaving(true);
         setError(null);
+
+        const avatarToSave = avatar === 'default' ? '' : avatar
+        
         try {
             await updateProfile(
                 displayName.trim(),
@@ -39,17 +42,20 @@ export const EditProfileModal = ({ isOpen, onClose, profileData, onSave }: Props
                 avatar,
                 bannerUrl.trim() || null,
             );
+            await refreshProfile();
             onSave({
                 display_name: displayName.trim(),
                 bio: bio.trim() || null,
-                avatar,
+                avatar: avatarToSave,
                 banner_url: bannerUrl.trim() || null,
             });
             onClose();
+            toastSuccess("Profile updated!")
         } catch (err: any) {
             setError(err.message || 'Failed to update profile');
+        } finally {
+            setSaving(false);
         }
-        setSaving(false);
     }
 
     if (!isOpen) return null;
@@ -75,11 +81,14 @@ export const EditProfileModal = ({ isOpen, onClose, profileData, onSave }: Props
                     <div className="flex flex-col gap-2">
                         <label className="text-white/40 text-xs uppercase tracking-wide">Avatar</label>
                         <div className="flex items-center gap-4">
-                            <img
-                                src={avatar}
-                                alt="current avatar"
-                                className="w-16 h-16 rounded-full object-cover border-2 border-purple-500/50 shrink-0"
-                            />
+                            <div className="rounded-full border-2 border-purple-500/50">
+                                <Avatar
+                                    avatar={avatar}
+                                    username={username}
+                                    size="w-16 h-16"
+                                    textSize="text-2xl pb-1"
+                                />
+                            </div>
                             <button
                                 onClick={() => setShowAvatarPicker(!showAvatarPicker)}
                                 className="text-sm text-purple-400 hover:text-purple-300 transition-colors border border-purple-500/30 hover:border-purple-500/60 px-3 py-1.5 rounded-lg"
@@ -90,6 +99,21 @@ export const EditProfileModal = ({ isOpen, onClose, profileData, onSave }: Props
 
                         {showAvatarPicker && (
                             <div className="grid grid-cols-6 gap-2 mt-2 max-h-52 overflow-y-auto pr-1">
+                                {/* default avatar */}
+                                <div
+                                    onClick={() => setAvatar('default')}
+                                    className={`w-full aspect-square rounded-full cursor-pointer transition-all hover:scale-105 flex items-center justify-center
+                                        ${avatar === 'default'
+                                        ? 'ring-2 ring-purple-500 opacity-100'
+                                        : 'opacity-70 hover:opacity-100'
+                                        }`}
+                                >
+                                    <Avatar
+                                        username={username}
+                                        size="w-full h-full"
+                                        textSize="text-lg"
+                                    />
+                                </div>
                                 {avatars.map((src, i) => (
                                     <img
                                         key={i}
@@ -97,11 +121,9 @@ export const EditProfileModal = ({ isOpen, onClose, profileData, onSave }: Props
                                         alt={`avatar ${i + 1}`}
                                         onClick={() => {
                                             setAvatar(src);
-                                            setShowAvatarPicker(false);
                                         }}
-                                        className={`w-full aspect-square rounded-full object-cover cursor-pointer transition-all hover:scale-105 ${
-                                            avatar === src ? 'ring-2 ring-purple-500' : 'opacity-70 hover:opacity-100'
-                                        }`}
+                                        className={`w-full aspect-square rounded-full object-cover cursor-pointer transition-all hover:scale-105 ${avatar === src ? 'ring-2 ring-purple-500' : 'opacity-70 hover:opacity-100'
+                                            }`}
                                     />
                                 ))}
                             </div>

@@ -1,4 +1,5 @@
 import {useNavigate } from "react-router-dom"
+import heroImage from '../assets/AniWayHeroImage.png'
 
 export const LandingHero = () => {
     const navigate = useNavigate();
@@ -12,7 +13,7 @@ export const LandingHero = () => {
         items-center
         "
         style={{
-            backgroundImage: `url('/src/assets/AniWayHeroImage.png')`,
+            backgroundImage: `url(${heroImage})`,
         }}
         >
             <div className="

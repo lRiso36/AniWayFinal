@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import type { ListDetailType } from "../../types/ListType"
 import type { AnimeType } from "../../types/AnimeType"
-import { getAnimebySearch } from "../../services/animeService"
-import { createUserList, updateUserList } from "../../services/userListsService"
-import { createPost } from "../../services/postService"
-import { toastError } from "../../lib/toast"
+import { useAnimeSearch } from "../../hooks/lists/useAnimeSearch"
+import { useCreateList } from "../../hooks/lists/useCreateList"
 
 type CreatListTypes = {
     isOpen: boolean,
@@ -16,23 +14,36 @@ type CreatListTypes = {
 
 
 export const CreateListModal = ({ isOpen, currentInfo, initialAnime, onClose, onSave }: CreatListTypes) => {
-    const [listData, setListData] = useState({
-        name: '',
-        description: '',
-        isPublic: false,
-        isRanked: false,
-    })
-    const [selectedAnime, setSelectedAnime] = useState<AnimeType[]>([]);
+
     const [currentTab, setCurrentTab] = useState<"details" | "add">("details");
     const [animeSearch, setAnimeSearch] = useState('');
-    const [animeSearchResults, setAnimeSearchResults] = useState<AnimeType[]>([]);
-    const [searchLoading, setSearchLoading] = useState(false);
+
     const [shareToFeed, setShareToFeed] = useState(false);
     const [feedCaption, setFeedCaption] = useState('');
     const [hasSubmitted, setHasSubmitted] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
 
-    const canSubmit = listData.name.trim().length > 0;
+    const { animeSearchResults, searchLoading } = useAnimeSearch(animeSearch);
+    const {
+        listData, setListData,
+        selectedAnime, setSelectedAnime,
+        isSaving, canSubmit,
+        handleSave,
+    } = useCreateList(isOpen, currentInfo, initialAnime, onSave);
+
+    const handleClose = () => {
+        setHasSubmitted(false);
+        setCurrentTab('details')
+        setShareToFeed(false)
+        setFeedCaption('');
+        setAnimeSearch('');
+        onClose();
+    }
+
+    const handleSubmit = async () => {
+        setHasSubmitted(true);
+        const success = await handleSave(shareToFeed, feedCaption);
+        if (success) handleClose();
+    }
 
     const detailsTab = (
         <div className="flex flex-col gap-4">
@@ -224,112 +235,12 @@ export const CreateListModal = ({ isOpen, currentInfo, initialAnime, onClose, on
         </div>
     )
 
-    const handleSave = async () => {
-        setHasSubmitted(true)
-        if (!canSubmit) return;
-
-        setIsSaving(true);
-        try {
-            const animeIds = selectedAnime.map(a => a.anilistId);
-
-            if (currentInfo) {
-                await updateUserList(
-                    currentInfo.id,
-                    listData.name,
-                    listData.description || null,
-                    listData.isPublic,
-                    listData.isRanked,
-                    animeIds
-                );
-            } else {
-                const newList = await createUserList(
-                    listData.name,
-                    listData.description || null,
-                    listData.isPublic,
-                    listData.isRanked,
-                    animeIds
-                );
-
-                if (shareToFeed && newList) {
-                    try {
-                        await createPost(
-                            'list',
-                            feedCaption.trim() || null,
-                            undefined,
-                            newList.id,
-                            undefined
-                        );
-                    } catch {
-                        toastError("List created but failed to post to feed");
-                    }
-                }
-            }
-            onSave();
-        } catch (err) {
-            toastError("Failed to save list, please try again")
-        } finally {
-            setIsSaving(false);
-        }
-    }
-
-    useEffect(() => {
-        if (!isOpen) {
-            setListData({
-                name: '',
-                description: '',
-                isPublic: false,
-                isRanked: false,
-            })
-            setSelectedAnime([]);
-            setAnimeSearch('');
-            setAnimeSearchResults([]);
-            setCurrentTab('details');
-            setShareToFeed(false);
-            setFeedCaption('');
-            return;
-        };
-
-        setListData({
-            name: currentInfo?.name ?? '',
-            description: currentInfo?.description ?? '',
-            isPublic: currentInfo?.isPublic ?? false,
-            isRanked: currentInfo?.isRanked ?? false,
-        });
-        if (currentInfo && 'anime' in currentInfo) {
-            setSelectedAnime(currentInfo.anime);
-        } else if (!currentInfo && initialAnime) {
-            setSelectedAnime([initialAnime]);
-        } else {
-            setSelectedAnime([]);
-        }
-    }, [currentInfo, isOpen]);
-
-    useEffect(() => {
-        if (!animeSearch.trim()) {
-            setAnimeSearchResults([]);
-            return;
-        }
-
-        const timer = setTimeout(async () => {
-            setSearchLoading(true);
-            try {
-                const results = await getAnimebySearch(animeSearch);
-                setAnimeSearchResults(results);
-            } catch {
-                toastError("Failed to search anime")
-            } finally {
-                setSearchLoading(false);
-            }
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [animeSearch]);
-
     if (!isOpen) return null;
+
     return (
         <div
             className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-            onClick={() => { onClose(); setHasSubmitted(false) }}
+            onClick={handleClose}
         >
             <div
                 className="bg-[#1e1e2e] rounded-xl p-4 sm:p-6 w-full max-w-md mx-4 flex flex-col gap-4 border border-white/10 max-h-[90vh] overflow-hidden"
@@ -337,7 +248,7 @@ export const CreateListModal = ({ isOpen, currentInfo, initialAnime, onClose, on
             >
                 <div className="flex items-center justify-between px-1 pb-3 border-b border-white/10">
                     <h2 className="text-white font-semibold text-lg">{currentInfo ? 'Edit List' : 'Create List'}</h2>
-                    <button onClick={() => { onClose(); setHasSubmitted(false) }} className="text-white/50 hover:text-white transition-colors">✕</button>
+                    <button onClick={handleClose} className="text-white/50 hover:text-white transition-colors">✕</button>
                 </div>
                 <div className="flex border-b border-white/10">
                     <button
@@ -361,14 +272,14 @@ export const CreateListModal = ({ isOpen, currentInfo, initialAnime, onClose, on
                 )}
                 <div className="flex gap-2 px-1 pt-4 border-t border-white/10">
                     <button
-                        onClick={() => { onClose(); setHasSubmitted(false) }}
+                        onClick={handleClose}
                         className="flex-1 bg-white/5 hover:bg-white/10 text-white/60 text-sm py-2.5 rounded-lg transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         className="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
-                        onClick={() => handleSave()}
+                        onClick={() => handleSubmit()}
                     >
                         {isSaving
                             ? currentInfo ? 'Saving changes...' : 'Creating List...'

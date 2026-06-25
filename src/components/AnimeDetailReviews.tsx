@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { getAnimeReviews } from "../services/reviewService";
 import type { AnimeReviewType } from "../types/ReviewType";
 import { Avatar } from "./Avatar";
+import { MiniLoading } from "./Loading";
+import { toastError } from "../lib/toast";
 
 
 type Props = {
@@ -14,6 +16,7 @@ export const AnimeReviews = ({ animeId }: Props) => {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [offset, setOffset] = useState(0);
+    const [loadMoreError, setLoadMoreError] = useState(false)
 
     const fetchReviews = async (reset: boolean) => {
         const newOffset = reset ? 0 : offset + 8;
@@ -26,6 +29,7 @@ export const AnimeReviews = ({ animeId }: Props) => {
         }
 
         try {
+            setLoadMoreError(false);
             const currReviews = await getAnimeReviews(animeId, newOffset);
             if (reset) {
                 setReviews(currReviews);
@@ -34,7 +38,9 @@ export const AnimeReviews = ({ animeId }: Props) => {
             }
             setHasMore(currReviews.length === 8);
         } catch (error) {
-            console.error(error);
+            (reset)
+                ? toastError("Failed to get reviews. Try again later.")
+                : setLoadMoreError(true);
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
@@ -46,9 +52,7 @@ export const AnimeReviews = ({ animeId }: Props) => {
     }, [animeId]);
 
     if (isLoading) return (
-        <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <MiniLoading loading={isLoading} />
     )
 
     if (reviews.length === 0) return (
@@ -64,8 +68,8 @@ export const AnimeReviews = ({ animeId }: Props) => {
                 >
                     <div className="flex items-center gap-2.5">
                         <Avatar
-                        avatar={review.user.avatar}
-                        username={review.user.username}
+                            avatar={review.user.avatar}
+                            username={review.user.username}
                         />
                         <div>
                             <p className="text-white text-sm sm:text-base font-medium leading-tight">
@@ -92,7 +96,7 @@ export const AnimeReviews = ({ animeId }: Props) => {
                     disabled={isLoadingMore}
                     className="text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors py-2 disabled:opacity-50"
                 >
-                    {isLoadingMore ? 'Loading...' : 'Load more'}
+                    {loadMoreError ? 'Retry' : isLoadingMore ? 'Loading...' : 'Load more'}
                 </button>
             )}
         </div>

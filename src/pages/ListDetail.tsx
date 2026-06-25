@@ -5,7 +5,7 @@ import { getListById } from "../services/userListsService";
 import { useAuth } from "../context/Authcontext";
 import { AnimeCard } from "../components/AnimeCard";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
-import { useListLike } from "../components/MyListsComponents/useListLike";
+import { useListLike } from "../hooks/useListLike";
 import { toastError } from "../lib/toast";
 import { Loading } from "../components/Loading";
 

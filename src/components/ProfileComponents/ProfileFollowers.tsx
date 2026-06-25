@@ -1,16 +1,8 @@
-import { useEffect, useState } from "react";
-import { getFollowers } from "../../services/followService";
 import { useNavigate } from "react-router-dom";
 import { Avatar } from "../Avatar";
-import { toastError } from "../../lib/toast";
 import { MiniLoading } from "../Loading";
-
-type FollowUser = {
-    id: string;
-    username: string;
-    display_name: string | null;
-    avatar: string | null;
-}
+import { useProfileFollowers } from "../../hooks/profile/useProfileFollowers";
+import type { FollowUser } from "../../types/FollowUser";
 
 const UserRow = ({ user, onClick }: { user: FollowUser, onClick: () => void }) => (
     <div
@@ -29,23 +21,8 @@ const UserRow = ({ user, onClick }: { user: FollowUser, onClick: () => void }) =
 )
 
 export const ProfileFollowers = ({ userId }: { userId: string }) => {
-    const [followers, setFollowers] = useState<FollowUser[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
-
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const data = await getFollowers(userId);
-                setFollowers(data);
-            } catch {
-                toastError("Unable to get follower data right now.")
-            } finally {
-                setIsLoading(false);
-            }
-        }
-        fetch();
-    }, [userId]);
+    const {followers, isLoading} = useProfileFollowers(userId);
 
     if (isLoading) return (
         <MiniLoading loading={isLoading} />

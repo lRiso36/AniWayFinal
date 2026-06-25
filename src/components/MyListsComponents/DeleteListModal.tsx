@@ -1,6 +1,5 @@
 import type { ListType } from "../../types/ListType"
-import { deleteUserList } from "../../services/userListsService"
-import toast from "react-hot-toast"
+import { useDeleteList } from "../../hooks/lists/useDeleteList"
 
 type DeleteListModalTypes = {
     isOpen: boolean,
@@ -10,16 +9,7 @@ type DeleteListModalTypes = {
 }
 
 export const DeleteListModal = ({ isOpen, onClose, list, onSave }: DeleteListModalTypes) => {
-    const handleDelete = async () => {
-        try {
-            await deleteUserList(list.id);
-            onSave();
-        } catch (error) {
-            toast.error("Failed to delete list, please try again")
-        } finally {
-            onClose();
-        }
-    }
+    const { handleDelete } = useDeleteList(onSave, onClose);
 
     if (!isOpen) return null;
 
@@ -58,7 +48,7 @@ export const DeleteListModal = ({ isOpen, onClose, list, onSave }: DeleteListMod
                 </div>
 
                 <button
-                    onClick={handleDelete}
+                    onClick={() => handleDelete(list.id)}
                     className="w-full bg-red-600 hover:bg-red-500 text-white text-base sm:text-lg font-semibold py-2.5 rounded-lg transition-colors"
                 >
                     Delete

@@ -1,11 +1,9 @@
 import { useAuth } from "../../context/Authcontext"
 import type { ListType } from "../../types/ListType"
-import { useState, useRef, useEffect } from "react"
+import { useState} from "react"
 import { CreateListModal } from "./CreateListModal"
-import type { ListDetailType } from "../../types/ListType"
-import { getListById } from "../../services/userListsService"
 import { DeleteListModal } from "./DeleteListModal"
-import { toastError } from "../../lib/toast"
+import { useListCard } from "../../hooks/lists/useListCard"
 
 type ListCardType = {
     list: ListType
@@ -15,39 +13,19 @@ type ListCardType = {
 }
 
 export const ListCard = ({ list, onDelete, onEditSave, onClick }: ListCardType) => {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const [editOpen, setEditOpen] = useState(false);
-    const [fullList, setFullList] = useState<ListDetailType | null>(null);
-    const [editLoading, setEditLoading] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
+    const {
+        menuOpen, setMenuOpen,
+        editOpen, setEditOpen,
+        fullList, setFullList,
+        editLoading,
+        menuRef,
+        handleEditClick
+    } = useListCard();
 
     const { user } = useAuth();
 
     const isOwner = user?.id === list.userId;
-
-    const handleEditClick = async () => {
-        setEditLoading(true);
-        try {
-            const data = await getListById(list.id);
-            setFullList(data);
-            setEditOpen(true);
-        } catch {
-            toastError("Unable to get list data. Try again later.")
-        } finally {
-            setEditLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        const handleClick = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-                setMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
 
     return (
         <>
@@ -109,7 +87,7 @@ export const ListCard = ({ list, onDelete, onEditSave, onClick }: ListCardType) 
                             {menuOpen && (
                                 <div className="absolute right-0 bottom-8 bg-[#1e1e2e] border border-white/10 rounded-xl shadow-xl w-36 py-1 z-20">
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); handleEditClick(); }}
+                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); handleEditClick(list.id); }}
                                         className="w-full text-left px-4 py-1.5 text-sm text-white/80 hover:bg-white/5 transition-colors"
                                     >
                                         ✏️ Edit

@@ -1,7 +1,7 @@
 import { useState } from "react"
 import type { ListDetailType } from "../../types/ListType"
 import type { AnimeType } from "../../types/AnimeType"
-import { useAnimeSearch } from "../../hooks/lists/useAnimeSearch"
+import { useAnimeSearch } from "../../hooks/anime/useAnimeSearch"
 import { useCreateList } from "../../hooks/lists/useCreateList"
 
 type CreatListTypes = {

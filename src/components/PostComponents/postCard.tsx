@@ -1,13 +1,21 @@
 import type { PostType } from "../../types/PostType"
-import { likePost, unlikePost } from "../../services/postService"
 import { useAuth } from "../../context/Authcontext"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { getComments, addComment } from "../../services/postService"
 import { ListCard } from "../MyListsComponents/ListCard"
 import type { ListType } from "../../types/ListType"
 import { Avatar } from "../Avatar"
-import { toastError } from "../../lib/toast"
+import { usePostLike } from "../../hooks/posts/usePostLikes"
+import { usePostComments } from "../../hooks/posts/usePostComments"
+
+const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+}
 
 type PostCardType = {
     post: PostType;
@@ -17,100 +25,17 @@ type PostCardType = {
 export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
     const navigate = useNavigate();
     const { username } = useAuth();
-    const [liked, setLiked] = useState(post.isLiked)
-    const [likeCount, setLikeCount] = useState(post.likeCount)
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
-    const [commentsOpen, setCommentsOpen] = useState(false);
-    const [comments, setComments] = useState<any[]>([]);
-    const [commentsLoading, setCommentsLoading] = useState(false);
-    const [commentCount, setCommentCount] = useState(post.commentCount);
-    const [newComment, setNewComment] = useState('');
-    const [submitting, setSubmitting] = useState(false);
 
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const [commentsOpen, setCommentsOpen] = useState(false);
+
+    const [newComment, setNewComment] = useState('');
+
+    const { liked, likeCount, isAnimating, handleLike } = usePostLike(post.isLiked, post.likeCount, post.id);
+    const { comments, commentsLoading, commentCount, submitting, handleToggleComments, handleAddComment } = usePostComments(post.id, post.commentCount)
     const isOwner = username === post.userInfo.username;
 
-    const timeAgo = (dateStr: string) => {
-        const diff = Date.now() - new Date(dateStr).getTime();
-        const mins = Math.floor(diff / 60000);
-        if (mins < 60) return `${mins}m ago`;
-        const hrs = Math.floor(mins / 60);
-        if (hrs < 24) return `${hrs}h ago`;
-        return `${Math.floor(hrs / 24)}d ago`;
-    }
-
-    const handleLike = async () => {
-        setIsAnimating(true);
-        const wasLiked = liked;
-        const oldLikeCount = likeCount;
-        setTimeout(() => setIsAnimating(false), 300)
-
-
-        if (liked) {
-            setLiked(false);
-            setLikeCount(prev => prev - 1);
-            try {
-                await unlikePost(post.id)
-            } catch {
-                toastError("Error unliking post. Try again later.")
-                setLiked(wasLiked);
-                setLikeCount(oldLikeCount);
-            }
-        } else {
-            setLiked(true);
-            setLikeCount(prev => prev + 1);
-            try {
-                await likePost(post.id)
-            } catch {
-                toastError("Error liking post. Try again later.")
-                setLiked(wasLiked);
-                setLikeCount(oldLikeCount);
-            }
-        }
-    }
-
-    const handleToggleComments = async () => {
-        if (commentsOpen) {
-            setCommentsOpen(false);
-            return;
-        }
-        setCommentsOpen(true);
-        if (comments.length > 0) return; // already loaded
-        setCommentsLoading(true);
-
-        try {
-            const data = await getComments(post.id);
-            setComments(data);
-        } catch {
-            toastError("Unable to laod comments for this post. Try again later.")
-        } finally {
-            setCommentsLoading(false)
-        }
-    }
-
-    const handleAddComment = async () => {
-        if (!newComment.trim() || submitting) return;
-        setSubmitting(true);
-
-        try {
-            await addComment(post.id, newComment.trim());
-        } catch {
-            toastError("Unable to add comment. Try again later.")
-            return;
-        }
-        try {
-            const data = await getComments(post.id);
-            setComments(data);
-            setCommentCount(prev => prev + 1);
-            setNewComment('');
-        } catch {
-            toastError("Comment was added but unable to load. Refresh page.")
-            setCommentCount(prev => prev + 1);
-            setNewComment('')
-        } finally {
-            setSubmitting(false);
-        }
-    }
 
     return (
         <div className="bg-[#12121f] border border-white/8 rounded-2xl p-4 flex flex-col gap-3">
@@ -225,7 +150,7 @@ export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
                 </button>
 
                 <button
-                    onClick={handleToggleComments}
+                    onClick={() => handleToggleComments(commentsOpen, setCommentsOpen)}
                     className="flex items-center gap-1.5 group">
                     <span className="text-xl text-white/30 group-hover:text-white/60 transition-colors mt-[2px]">💬</span>
                     <span className="text-white/30 text-sm">{commentCount}</span>
@@ -267,12 +192,12 @@ export const PostCard = ({ post, onPostDeleted }: PostCardType) => {
                             type="text"
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleAddComment()}
+                            onKeyDown={e => e.key === 'Enter' && handleAddComment(newComment, setNewComment)}
                             placeholder="Add a comment..."
                             className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs placeholder:text-white/25 outline-none focus:border-purple-500/50 transition-colors"
                         />
                         <button
-                            onClick={handleAddComment}
+                            onClick={() => handleAddComment(newComment, setNewComment)}
                             disabled={!newComment.trim() || submitting}
                             className="bg-white/10 p-2 rounded-lg text-purple-500 text-xs font-medium disabled:opacity-30 hover:text-purple-300 transition-colors"
                         >

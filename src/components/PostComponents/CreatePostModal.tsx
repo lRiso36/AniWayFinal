@@ -1,82 +1,33 @@
 import { useState } from "react";
-import { getAnimebySearch } from "../../services/animeService";
-import { createPost } from "../../services/postService";
-import { logAnime, getUserAnimeStatus } from "../../services/userAnimeService";
 import { RatingSlider } from "../RatingSlider";
-import { toastError } from "../../lib/toast";
+import { useAnimeSearch } from "../../hooks/anime/useAnimeSearch";
+import { useCreatePost } from "../../hooks/posts/useCreatePost";
 
-type Props = {
+type CreatePostModalType = {
     onClose: () => void;
     onPostCreated: () => void;
 }
 
-export const CreatePostModal = ({ onClose, onPostCreated }: Props) => {
+export const CreatePostModal = ({ onClose, onPostCreated }: CreatePostModalType) => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<any[]>([]);
-    const [searchLoading, setSearchLoading] = useState(false);
-    const [selectedAnime, setSelectedAnime] = useState<any | null>(null);
+
+
     const [caption, setCaption] = useState('');
     const [score, setScore] = useState<number | null>(null);
-    const [submitting, setSubmitting] = useState(false);
 
-    const handleSearch = async (q: string) => {
-        setSearchQuery(q);
-        if (q.length < 2) return setSearchResults([]);
-        setSearchLoading(true);
-        const results = await getAnimebySearch(q);
-        setSearchResults(results ?? []);
-        setSearchLoading(false);
-    }
 
-    const handleAnimeSelect = (anime: any) => {
-        setSelectedAnime(anime);
-        setSearchResults([]);
-        setSearchQuery('');
-    }
+    const { animeSearchResults, searchLoading } = useAnimeSearch(searchQuery);
+    const {
+        selectedAnime,
+        submitting,
+        handleAnimeSelect,
+        handleRemoveAnime,
+        handleSubmit
+    } = useCreatePost(onPostCreated, onClose);
 
-    const handleRemoveAnime = () => {
-        setSelectedAnime(null);
+    const handleRemove = () => {
+        handleRemoveAnime();
         setScore(null);
-    }
-
-    const handleSubmit = async () => {
-        if (submitting) return;
-        if (!caption.trim() && !selectedAnime) return;
-        setSubmitting(true);
-
-
-        const isRating = !!selectedAnime && score !== null;
-
-        if (isRating) {
-            try {
-                const existing = await getUserAnimeStatus(selectedAnime.anilistId);
-                await logAnime(
-                    selectedAnime.anilistId,
-                    existing?.status ?? 'completed',
-                    existing?.current_episode ?? selectedAnime.episodes ?? 0,
-                    selectedAnime.episodes ?? undefined,
-                    score
-                );
-            } catch {
-                toastError("Failed to add score to anime log. Try again later or log it in your 'My Anime'.")
-            }
-        }
-
-        try {
-            await createPost(
-                isRating ? 'rating' : 'just-because',
-                caption.trim() || null,
-                selectedAnime?.anilistId ?? undefined,
-                undefined,
-                score ?? undefined
-            );
-        } catch {
-            toastError("Unable to create post. Try again later.")
-        } finally {
-            setSubmitting(false);
-            onPostCreated();
-            onClose();
-        }
     }
 
     return (
@@ -102,7 +53,7 @@ export const CreatePostModal = ({ onClose, onPostCreated }: Props) => {
                                 {selectedAnime.title.english ?? selectedAnime.title.romaji}
                             </p>
                             <button
-                                onClick={handleRemoveAnime}
+                                onClick={handleRemove}
                                 className="text-white/30 hover:text-white/60 transition-colors text-sm shrink-0"
                             >
                                 ✕
@@ -124,7 +75,7 @@ export const CreatePostModal = ({ onClose, onPostCreated }: Props) => {
                         <input
                             type="text"
                             value={searchQuery}
-                            onChange={e => handleSearch(e.target.value)}
+                            onChange={e => setSearchQuery(e.target.value)}
                             placeholder="Search for an anime..."
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-white/25 outline-none focus:border-purple-500/50 transition-colors"
                         />
@@ -135,9 +86,16 @@ export const CreatePostModal = ({ onClose, onPostCreated }: Props) => {
                             </div>
                         )}
 
-                        {searchResults.length > 0 && (
+                        {searchQuery.trim() && !searchLoading && animeSearchResults.length === 0 && (
+                            <div className="flex justify-center py-2">
+                                <p className="text-white/30 text-sm">No anime found</p>
+                            </div>
+                        )}
+                        
+                        {animeSearchResults.length > 0 && (
+
                             <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
-                                {searchResults.map((anime: any) => (
+                                {animeSearchResults.map((anime: any) => (
                                     <div
                                         key={anime.anilistId}
                                         onClick={() => handleAnimeSelect(anime)}
@@ -171,7 +129,7 @@ export const CreatePostModal = ({ onClose, onPostCreated }: Props) => {
                 </div>
 
                 <button
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(caption, score)}
                     disabled={submitting || (!caption.trim() && !selectedAnime)}
                     className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors disabled:opacity-50"
                 >

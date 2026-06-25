@@ -1,125 +1,33 @@
-import { useState, useEffect, useRef } from "react";
+import { useState} from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import type { AnimeDetailType } from "../types/AnimeDetailType";
-import { getAnimeById } from "../services/animeService";
-import { getUserAnime, toggleIsFavorite } from "../services/userAnimeService";
-import type { UserAnimeEntry } from "../types/UserAnimeEntry";
 import { AnimeDetailNavBar } from "../components/AnimeDetailNavbar";
-import { getEpisodeData } from "../services/episodeDataService";
-import type { EpisodeType } from "../types/EpisodeType";
 import { EpisodeData } from "../components/EpisodeData";
 import { LogModal } from "../components/LogModal";
 import { CharacterList } from "../components/CharacterList";
 import { AnimeInfo } from "../components/AnimeInfo";
-import { AnimeCardMenu } from "../components/AnimeCardMenu";
 import { RemoveModal } from "../components/RemoveModal";
 import { RateReviewModal } from "../components/RateReviewModal";
 import { AnimeReviews } from "../components/AnimeDetailReviews";
 import { AddToListModal } from "../components/AddToListsModal";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
-import { toastError } from "../lib/toast";
 import { Loading } from "../components/Loading";
+import { useAnimeDetail } from "../hooks/animeDetail/useAnimeDetail";
+import { useEpisodeData } from "../hooks/animeDetail/useEpisodeData";
+import { ActionMenu } from "../components/ActionMenu";
 
 export const AnimeDetail = () => {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
-    const [animeDetails, setAnimeDetails] = useState<AnimeDetailType | null>(null);
-    const [loading, setLoading] = useState(true)
-    const [entry, setEntry] = useState<UserAnimeEntry | null>(null);
+
     const [showFullDesc, setShowFullDesc] = useState(false);
     const tab = searchParams.get("tab") || "details";
-    const [episodeData, setEpisodeData] = useState<EpisodeType[]>([]);
-    const [episodeLoading, setEpisodeLoading] = useState(true);
+
+    const { animeDetails, loading, entry, setEntry, toggleFavorite } = useAnimeDetail(id);
+    const { episodeData, episodeLoading } = useEpisodeData(id, tab);
+
     const [activeModal, setActiveModal] = useState<'log' | 'remove' | 'rate-review' | 'list' | 'create-list' | null>(null);
     const [showToast, setShowToast] = useState(false);
-    const canRemove = entry ? true : false;
-
-    const MENU_ITEMS = [
-        { label: "⭐ Rate & Review", id: "rate-review" },
-        { label: "📋 Add to List", id: "list" },
-    ];
-
-    const fetchEpisodeData = async (id: number) => {
-        setEpisodeLoading(true);
-        try {
-            const data = await getEpisodeData(id);
-            if (!data) {
-                setEpisodeData([]);
-            }
-            setEpisodeData(data ?? []);
-        } catch {
-            toastError("Failed to get episode data");
-        } finally {
-            setEpisodeLoading(false);
-        }
-    }
-
-    const fetchAnimeDetails = async () => {
-        setLoading(true);
-        try {
-        const [details, userAnime] = await Promise.all([
-            getAnimeById(Number(id)),
-            getUserAnime()
-        ])
-        setAnimeDetails(details)
-        const match = userAnime.find((item: any) => item.anime.anilistId === Number(id))
-        setEntry(match?.entry ?? null)
-        } catch {
-            toastError("Unable to get anime deatils at this time. Please try again later.")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const toggleFavorite = async () => {
-        const wasFavorite = entry?.isFavorite ?? false;
-
-        setEntry(prev =>
-            prev
-                ? { ...prev, isFavorite: !wasFavorite }
-                : {
-                    anilistId: animeDetails!.anilistId,
-                    status: 'completed',
-                    currentEpisode: animeDetails!.episodes ?? 0,
-                    score: null,
-                    isFavorite: true,
-                    startDate: null,
-                    finishDate: null,
-                }
-        );
-
-        try {
-            await toggleIsFavorite(
-                animeDetails!.anilistId,
-                animeDetails!.episodes
-            );
-        } catch (error) {
-            if (wasFavorite) {
-                toastError("Cannot remove from favorites right now. Try again later.")
-            } else {
-                toastError("Cannot add to favorites right now. Try again later.")
-            }
-            //revert if request fails
-            setEntry(prev =>
-                prev
-                    ? { ...prev, isFavorite: wasFavorite }
-                    : null
-            )
-        } // end catch
-    } //end toggle
-
-    //get anime details
-    useEffect(() => {
-        fetchAnimeDetails();
-    }, [])
-
-    //get 
-
-    useEffect(() => {
-        if (tab === 'episodes' && episodeData.length === 0 && id) {
-            fetchEpisodeData(Number(id));
-        }
-    }, [tab])
+    const canRemove = !!entry;
 
     const cleanDescription = animeDetails?.description
         ?.replace(/<br\s*\/?>/gi, '\n')
@@ -171,13 +79,20 @@ export const AnimeDetail = () => {
             <button
                 onClick={toggleFavorite}
                 className={`text-sm sm:text-base px-3 py-2 rounded-lg transition-colors ${entry?.isFavorite
-                        ? 'bg-pink-500/20 text-pink-400'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
+                    ? 'bg-pink-500/20 text-pink-400'
+                    : 'bg-white/10 hover:bg-white/20 text-white'
                     }`}
             >
                 {entry?.isFavorite ? '❤️' : '🤍'}
             </button>
-            <ActionMenu />
+            <ActionMenu
+                canRemove={canRemove}
+                onSelect={(id) => {
+                    if (id === 'remove') setActiveModal('remove');
+                    if (id === 'rate-review') setActiveModal('rate-review');
+                    if (id === 'list') setActiveModal('list');
+                }}
+            />
         </div>
     )
     const progressBox = entry && (
@@ -201,52 +116,6 @@ export const AnimeDetail = () => {
             <span className="text-purple-500 text-lg" style={{ paddingBottom: '1px' }}>★</span> {(animeDetails.averageScore / 10).toFixed(1)}
         </span>
     )
-
-    const ActionMenu = () => {
-        const localMenuRef = useRef<HTMLDivElement>(null);
-        const [localMenuOpen, setLocalMenuOpen] = useState(false);
-        const [localOpenLeft, setLocalOpenLeft] = useState(false);
-
-        useEffect(() => {
-            const handleClick = (e: MouseEvent) => {
-                if (localMenuRef.current && !localMenuRef.current.contains(e.target as Node)) {
-                    setLocalMenuOpen(false);
-                }
-            };
-            document.addEventListener("mousedown", handleClick);
-            return () => document.removeEventListener("mousedown", handleClick);
-        }, []);
-
-        return (
-            <div ref={localMenuRef} className="relative">
-                <button
-                    className="bg-white/10 hover:bg-white/20 text-white text-sm sm:text-base px-3 py-2 rounded-lg transition-colors"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (!localMenuOpen) {
-                            const pos = localMenuRef.current?.getBoundingClientRect();
-                            if (pos) {
-                                setLocalOpenLeft(window.innerWidth - pos.right < 200);
-                            }
-                        }
-                        setLocalMenuOpen(!localMenuOpen);
-                    }}
-                >···</button>
-                <AnimeCardMenu
-                    menuOpen={localMenuOpen}
-                    openLeft={localOpenLeft}
-                    items={MENU_ITEMS}
-                    canRemove={canRemove}
-                    onClose={() => setLocalMenuOpen(false)}
-                    onSelect={(id) => {
-                        if (id === 'remove') setActiveModal('remove');
-                        if (id === 'rate-review') setActiveModal('rate-review');
-                        if (id === 'list') { setActiveModal('list') }
-                    }}
-                />
-            </div>
-        );
-    };
 
     return (
         <div className="bg-[#0a0a14] min-h-screen pb-20">

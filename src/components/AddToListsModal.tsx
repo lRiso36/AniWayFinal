@@ -54,6 +54,7 @@ export const AddToListModal = ({ isOpen, onClose, animeToAdd, onSave, onCreateLi
                 setError('This anime is already in that list');
             } else {
                 setError('Failed to add anime to list');
+                toastError("Failed to add anime to list. Try again later.")
             }
         }
     }

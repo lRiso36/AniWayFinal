@@ -1,7 +1,8 @@
 // hooks/useListLike.ts
 import { useState, useEffect } from "react";
-import { getIsListLiked, getListLikeCount, toggleListLike } from "../../services/userListsService";
-import { toastError } from "../../lib/toast";
+import { getIsListLiked, getListLikeCount, toggleListLike } from "../services/userListsService";
+import { toastError } from "../lib/toast";
+
 
 export const useListLike = (listId: string) => {
     const [likeCount, setLikeCount] = useState(0);

@@ -1,36 +1,13 @@
-import { useState, useEffect } from "react";
-import { getLikedLists, getUserLists } from "../../services/userListsService";
-import type { ListType } from "../../types/ListType";
 import { ListsContainer } from "../MyListsComponents/ListContainer";
-import { toastError } from "../../lib/toast";
 import { MiniLoading } from "../Loading";
+import { useProfileLists } from "../../hooks/profile/useProfileLists";
 
 type ProfileListsType = {
     userId: string;
 }
 
 export const ProfileLists = ({ userId }: ProfileListsType) => {
-    const [lists, setLists] = useState<ListType[]>([]);
-    const [likedLists, setLikedLists] = useState<ListType[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchAll = async () => {
-            try {
-                const [owned, liked] = await Promise.all([
-                    getUserLists(userId),
-                    getLikedLists(userId),
-                ]);
-                setLists(owned ?? []);
-                setLikedLists(liked ?? []);
-            } catch {
-                toastError("Unable to get user list data. Try again later.")
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchAll();
-    }, [userId]);
+    const {lists, likedLists, loading } = useProfileLists(userId);
 
     if (loading) return (
         <MiniLoading loading={loading} />

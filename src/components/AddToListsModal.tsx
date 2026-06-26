@@ -1,9 +1,7 @@
 import type { AnimeType } from "../types/AnimeType"
-import { useState, useEffect } from "react"
-import { getUserLists } from "../services/userListsService"
+import { useState } from "react"
 import type { ListType } from "../types/ListType"
-import { addAnimeToList } from "../services/userListsService"
-import { toastError } from "../lib/toast"
+import { useAddToList } from "../hooks/lists/useAddToList"
 
 type AddToListModalType = {
     isOpen: boolean,
@@ -16,24 +14,13 @@ type AddToListModalType = {
 export const AddToListModal = ({ isOpen, onClose, animeToAdd, onSave, onCreateList }: AddToListModalType) => {
     const [currentTab, setCurrentTab] = useState<"public" | "private">("public");
     const [listSearch, setListSearch] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [userLists, setUserLists] = useState<ListType[]>([]);
     const [listToAdd, setListToAdd] = useState<ListType | null>(null);
-    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchLists = async () => {
-            try {
-                const lists = await getUserLists();
-                setUserLists(lists);
-            } catch {
-                toastError("Failed to get user lists");
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchLists();
-    }, [])
+    const { userLists, loading, error, handleSave } = useAddToList(
+        animeToAdd.anilistId,
+        onSave,
+        onClose
+    );
 
     const publicLists = userLists?.filter(list => list.isPublic);
     const privateLists = userLists?.filter(list => !list.isPublic);
@@ -41,23 +28,6 @@ export const AddToListModal = ({ isOpen, onClose, animeToAdd, onSave, onCreateLi
     const filteredLists = currentLists.filter(list =>
         list.name.toLowerCase().includes(listSearch.toLowerCase())
     );
-
-    const handleSave = async () => {
-        if (!listToAdd) return;
-        setError(null);
-        try {
-            await addAnimeToList(listToAdd.id, animeToAdd.anilistId);
-            onSave();
-            onClose();
-        } catch (error: any) {
-            if (error.message?.includes('unique') || error.message?.includes('duplicate')) {
-                setError('This anime is already in that list');
-            } else {
-                setError('Failed to add anime to list');
-                toastError("Failed to add anime to list. Try again later.")
-            }
-        }
-    }
 
     if (!isOpen) return null;
 
@@ -173,7 +143,7 @@ export const AddToListModal = ({ isOpen, onClose, animeToAdd, onSave, onCreateLi
                     <p className="text-red-400 text-xs text-center">{error}</p>
                 )}
                 <button
-                    onClick={handleSave}
+                    onClick={() => handleSave(listToAdd)}
                     className="w-full bg-purple-500 hover:bg-purple-400 text-white text-sm sm:text-base font-semibold py-2 rounded-lg transition-colors"
                 >
                     Add to List

@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import type { AnimeType } from "../types/AnimeType";
 import type { UserAnimeEntry } from "../types/UserAnimeEntry";
-import { logAnime, addReview } from "../services/userAnimeService";
-import { createPost } from "../services/postService";
 import { RatingSlider } from "./RatingSlider";
-import toast from "react-hot-toast";
+import { useRateReview } from "../hooks/anime/useRateReview";
 
 type RateReviewType = {
     isOpen: boolean;
@@ -19,67 +17,31 @@ export const RateReviewModal = ({ isOpen, onClose, anime, currentEntry, onSave, 
     const [score, setScore] = useState<number | null>(currentEntry?.score ?? null);
     const [review, setReview] = useState('');
     const [shareToFeed, setShareToFeed] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [hasSubmitted, setHasSubmitted] = useState(false);
 
     const canSubmit = review.trim().length > 0 || score;
+
+     const { 
+        saving, 
+        handleSave 
+    } = useRateReview(anime, currentEntry, onSave, onClose, onPosted);
 
     useEffect(() => {
         setScore(currentEntry?.score ?? null);
         setReview('');
         setShareToFeed(false);
+        setHasSubmitted(false);
     }, [isOpen]);
 
-    const handleSave = async () => {
-        setHasSubmitted(true)
-        if (!canSubmit) return
+    const handleSubmit = async () => {
+        setHasSubmitted(true);
+        if (!canSubmit) return;
+        await handleSave(score, review, shareToFeed);
+    }
 
-        setSaving(true);
-        try {
-            await logAnime(
-                anime.anilistId,
-                currentEntry?.status ?? 'completed',
-                currentEntry?.currentEpisode ?? anime.episodes ?? 0,
-                anime.episodes ?? undefined,
-                score,
-                review.trim() || null
-            );
-
-            if (review.trim()) {
-                await addReview(anime.anilistId, review.trim())
-            }
-
-            onSave({
-                anilistId: anime.anilistId,
-                status: currentEntry?.status ?? 'completed',
-                currentEpisode: currentEntry?.currentEpisode ?? anime.episodes ?? 0,
-                score,
-                isFavorite: currentEntry?.isFavorite ?? false,
-                startDate: currentEntry?.startDate ?? null,
-                finishDate: currentEntry?.finishDate ?? null,
-            });
-
-            if (shareToFeed) {
-                try {
-                    await createPost(
-                        review.trim() ? 'review' : 'rating',
-                        review.trim() || null,
-                        anime.anilistId,
-                        undefined,
-                        score ?? undefined
-                    );
-                    onPosted?.();
-                } catch {
-                    toast.error("Failed to post to feed")
-                }
-            }
-
-            onClose();
-        } catch {
-            toast.error("Failed to save, please try again")
-        } finally {
-            setSaving(false);
-        }
+    const handleClose = () => {
+        setHasSubmitted(false);
+        onClose();
     }
 
     if (!isOpen) return null;
@@ -87,7 +49,7 @@ export const RateReviewModal = ({ isOpen, onClose, anime, currentEntry, onSave, 
     return (
         <div
             className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-            onClick={() => { onClose(); setHasSubmitted(false) }}
+            onClick={() => {handleClose()}}
         >
             <div
                 className="bg-[#1e1e2e] rounded-xl p-4 sm:p-6 w-full max-w-md mx-4 flex flex-col gap-4 border border-white/10"
@@ -95,7 +57,7 @@ export const RateReviewModal = ({ isOpen, onClose, anime, currentEntry, onSave, 
             >
                 <div className="flex items-center justify-between border-b border-purple-500/60 pb-3">
                     <h2 className="text-white font-semibold text-lg pl-1">Rate & Review</h2>
-                    <button onClick={() => { onClose(); setHasSubmitted(false) }} className="text-white/50 hover:text-white transition-colors text-lg">✕</button>
+                    <button onClick={() => {handleClose()}} className="text-white/50 hover:text-white transition-colors text-lg">✕</button>
                 </div>
 
                 <div className="flex gap-3 sm:gap-4 items-start">
@@ -141,7 +103,7 @@ export const RateReviewModal = ({ isOpen, onClose, anime, currentEntry, onSave, 
                 )}
 
                 <button
-                    onClick={handleSave}
+                    onClick={handleSubmit}
                     disabled={saving}
                     className="w-full bg-purple-600 hover:bg-purple-500 text-white text-base font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50"
                 >

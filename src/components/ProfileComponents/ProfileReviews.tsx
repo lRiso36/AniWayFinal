@@ -1,54 +1,13 @@
-import { useState, useEffect } from "react"
-import type { ReviewType } from "../../types/ReviewType";
-import { getUserReviews } from "../../services/reviewService";
 import { useNavigate } from "react-router-dom";
-import { toastError } from "../../lib/toast";
 import { MiniLoading } from "../Loading";
+import { useProfileReviews } from "../../hooks/profile/useProfileReviews";
 
 type ProfileReviewsType = {
     userId: string;
 }
 export const ProfileReviews = ({ userId }: ProfileReviewsType) => {
-    const [reviews, setReviews] = useState<ReviewType[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const [offset, setOffset] = useState(0);
-
     const navigate = useNavigate();
-
-    const fetchReviews = async (reset: boolean) => {
-        if (!userId) return;
-
-        const newOffset = reset ? 0 : offset + 8;
-        setOffset(newOffset);
-
-
-        if (reset) {
-            setIsLoading(true)
-        } else {
-            setIsLoadingMore(true)
-        }
-
-        try {
-            const currReviews = await getUserReviews(userId, newOffset);
-            if (reset) {
-                setReviews(currReviews)
-            } else {
-                setReviews(prev => [...prev, ...currReviews]);
-            }
-            setHasMore(currReviews.length === 8);
-        } catch (error) {
-            toastError("There was a problem getting user reviews.")
-        } finally {
-            setIsLoading(false);
-            setIsLoadingMore(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchReviews(true);
-    }, [])
+    const {reviews, isLoading, isLoadingMore, hasMore, fetchReviews} = useProfileReviews(userId);
 
     if (isLoading) return (
         <MiniLoading loading={isLoading} />

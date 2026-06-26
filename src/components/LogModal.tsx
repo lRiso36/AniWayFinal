@@ -1,9 +1,8 @@
 import type { AnimeType } from "../types/AnimeType"
 import type { UserAnimeEntry, UserAnimeStatus } from "../types/UserAnimeEntry"
 import { useState, useEffect } from "react"
-import { logAnime } from "../services/userAnimeService"
 import { RatingSlider } from "./RatingSlider"
-import toast from "react-hot-toast"
+import { useLogModal } from "../hooks/anime/useLogModal"
 
 type LogModalTypes = {
     isOpen: boolean,
@@ -17,48 +16,12 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
     const [status, setStatus] = useState<UserAnimeStatus>(currentEntry?.status ?? 'plan-to-watch');
     const [currentEpisode, setCurrentEpisode] = useState<number>(currentEntry?.currentEpisode ?? 0);
     const [score, setScore] = useState<number | null>(currentEntry?.score ?? null);
-    const [isSaving, setIsSaving] = useState(false);
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        try {
-            await logAnime(anime.anilistId, status, currentEpisode, anime.episodes, score);
-            onSave({
-                anilistId: anime.anilistId,
-                status,
-                currentEpisode,
-                score,
-                isFavorite: currentEntry?.isFavorite ?? false,
-                startDate: currentEntry?.startDate ?? null,
-                finishDate: currentEntry?.finishDate ?? null,
-            });
-        } catch (error) {
-            toast.error("Failed to log anime, please try again")
-        } finally {
-            setIsSaving(false);
-        }
-    }
-
-    const handleStatusChange = (newStatus: UserAnimeStatus) => {
-        setStatus(newStatus);
-        if (newStatus === 'completed') {
-            setCurrentEpisode(anime.episodes ?? 0)
-        }
-        if (newStatus === 'plan-to-watch') {
-            setCurrentEpisode(0);
-        }
-    }
-
-    const handleEpisodeChange = (ep: number) => {
-        setCurrentEpisode(ep);
-        if (ep === 0) {
-            setStatus('plan-to-watch');
-        } else if (anime.episodes && ep === anime.episodes) {
-            setStatus('completed');
-        } else {
-            setStatus('watching');
-        }
-    }
+    const {
+        isSaving, 
+        handleSave, 
+        handleStatusChange, 
+        handleEpisodeChange
+    } = useLogModal(anime, currentEntry, onSave);
 
     useEffect(() => {
         setStatus(currentEntry?.status ?? 'plan-to-watch');
@@ -100,7 +63,7 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
                             <label className="text-white/40 text-xs uppercase tracking-wide">Status</label>
                             <select
                                 value={status}
-                                onChange={(e) => handleStatusChange(e.target.value as UserAnimeStatus)}
+                                onChange={(e) => handleStatusChange(e.target.value as UserAnimeStatus, setStatus, setCurrentEpisode)}
                                 className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full"
                             >
                                 <option value="watching">Watching</option>
@@ -113,7 +76,7 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
                                 <label className="text-white/40 text-xs uppercase tracking-wide">Current Episode</label>
                                 <select
                                     value={currentEpisode}
-                                    onChange={(e) => handleEpisodeChange(Number(e.target.value))}
+                                    onChange={(e) => handleEpisodeChange(Number(e.target.value), setStatus, setCurrentEpisode)}
                                     className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full"
                                 >
                                     <option value={0}>Not Started</option>
@@ -134,7 +97,7 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
                     </div>
                 </div>
                 <button
-                    onClick={handleSave}
+                    onClick={() => handleSave(status, currentEpisode, score)}
                     disabled={isSaving}
                     className={`w-full bg-purple-600 hover:bg-purple-500 text-white text-base font-semibold py-2.5 rounded-lg transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >

@@ -1,15 +1,11 @@
-import { useState, useEffect } from "react";
-import { getTopRatedAnime, getTrendingAnime, getTrendingMovies, getHiddenGems } from "../services/animeGroupService";
-import type { AnimeType } from "../types/AnimeType";
+import { useState } from "react";
 import { BrowseRow } from "../components/BrowseComponents/BrowseRow";
 import type { UserAnimeEntry } from "../types/UserAnimeEntry";
-import { getUserAnime } from "../services/userAnimeService";
-import { getAnimebySearch } from "../services/animeService";
 import { AnimeCard } from "../components/AnimeCard";
-import { getAnimeByGenre } from "../services/animeGenreService";
 import { BareLoading, Loading } from "../components/Loading";
-import { toastError } from "../lib/toast";
-
+import { useBrowseData } from "../hooks/browse/useBrowseData";
+import { useGenreFilter } from "../hooks/browse/useGenreFilter";
+import { useAnimeSearch } from "../hooks/anime/useAnimeSearch";
 
 const genres = [
     "All",
@@ -29,18 +25,15 @@ const genres = [
 ]
 
 export const Browse = () => {
-    const [searchQuery, setSearchQuery] = useState<string>("");
-    const [activeGenre, setActiveGenre] = useState("All");
-    const [trendingAnime, setTrendingAnime] = useState<AnimeType[]>([]);
-    const [topRatedAnime, setTopRatedAnime] = useState<AnimeType[]>([]);
-    const [trendingMovies, setTrendingMovies] = useState<AnimeType[]>([]);
-    const [hiddenGems, setHiddenGems] = useState<AnimeType[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [animeEntryList, setAnimeEntryList] = useState<{ entry: UserAnimeEntry, anime: AnimeType }[]>([]);
-    const [searchResults, setSearchResults] = useState<AnimeType[]>([]);
-    const [genreResults, setGenreResults] = useState<AnimeType[]>([]);
-    const [genreLoading, setGenreLoading] = useState(true);
-    const [searchLoading, setSearchLoading] = useState(false);
+    const {
+        trendingAnime, topRatedAnime, trendingMovies, hiddenGems,
+        loading, animeEntryList, setAnimeEntryList
+    } = useBrowseData();
+
+    const { activeGenre, setActiveGenre, genreResults, genreLoading } = useGenreFilter();
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const { animeSearchResults: searchResults, searchLoading } = useAnimeSearch(searchQuery)
 
     const updateEntry = (updated: UserAnimeEntry | null, anilistId: number) => {
         setAnimeEntryList(current => {
@@ -72,75 +65,6 @@ export const Browse = () => {
             return [...current, { entry: updated, anime: animeData }]
         })
     }
-
-    const fetchData = async () => {
-        setLoading(true)
-        try {
-            const [trending, topRated, movies, gems, userAnime] = await Promise.all([
-                getTrendingAnime(),
-                getTopRatedAnime(),
-                getTrendingMovies(),
-                getHiddenGems(),
-                getUserAnime()
-            ]);
-            setTrendingAnime(trending || []);
-            setTopRatedAnime(topRated || []);
-            setTrendingMovies(movies || []);
-            setHiddenGems(gems || []);
-            setAnimeEntryList(userAnime || []);
-        } catch {
-            toastError("Unable to get all browsing data.")
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    const fetchGenreAnime = async (genre: string) => {
-        setGenreLoading(true)
-        try {
-            const genreAnimes = await getAnimeByGenre(genre);
-            setGenreResults(genreAnimes || []);
-        } catch {
-            toastError(`Unable to get data for ${genre} genre`)
-        } finally {
-            setGenreLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchData();
-    }, [])
-
-    useEffect(() => {
-        if (!searchQuery.trim()) {
-            setSearchResults([]);
-            return;
-        }
-
-        setSearchLoading(true)
-        const timer = setTimeout(async () => {
-            try {
-                const results = await getAnimebySearch(searchQuery);
-                setSearchResults(results);
-            } catch {
-                toastError("Unable to search for anime right now. Try again later.")
-            } finally {
-                setSearchLoading(false)
-            }
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [searchQuery])
-
-    //if no anime found, if genre or anime search fials
-
-    useEffect(() => {
-        if (activeGenre !== 'All') {
-            fetchGenreAnime(activeGenre);
-        } else {
-            setGenreResults([])
-        }
-    }, [activeGenre])
 
     const entries = animeEntryList.map(item => item.entry);
 
@@ -252,46 +176,46 @@ export const Browse = () => {
                             No anime found for <span className="text-purple-400">'{searchQuery.trim()}'</span>
                         </p>
                     )
-                    ) : activeGenre === 'All' ? (
-                        //Browse mode
+                ) : activeGenre === 'All' ? (
+                    //Browse mode
 
-                        <>
-                            {trendingAnime?.length > 0 && (
-                                <BrowseRow title="Trending Now" items={trendingAnime} entries={entries} onEntryChange={updateEntry} />
-                            )}
-                            {topRatedAnime?.length > 0 && (
-                                <BrowseRow title="Top Rated" items={topRatedAnime} entries={entries} onEntryChange={updateEntry} />
-                            )}
-                            {trendingMovies?.length > 0 && (
-                                <BrowseRow title="Movies" items={trendingMovies} entries={entries} onEntryChange={updateEntry} />
-                            )}
-                            {hiddenGems?.length > 0 && (
-                                <BrowseRow title="Hidden Gems" items={hiddenGems} entries={entries} onEntryChange={updateEntry} />
-                            )}
-                        </>
-                    ) : (
+                    <>
+                        {trendingAnime?.length > 0 && (
+                            <BrowseRow title="Trending Now" items={trendingAnime} entries={entries} onEntryChange={updateEntry} />
+                        )}
+                        {topRatedAnime?.length > 0 && (
+                            <BrowseRow title="Top Rated" items={topRatedAnime} entries={entries} onEntryChange={updateEntry} />
+                        )}
+                        {trendingMovies?.length > 0 && (
+                            <BrowseRow title="Movies" items={trendingMovies} entries={entries} onEntryChange={updateEntry} />
+                        )}
+                        {hiddenGems?.length > 0 && (
+                            <BrowseRow title="Hidden Gems" items={hiddenGems} entries={entries} onEntryChange={updateEntry} />
+                        )}
+                    </>
+                ) : (
                     //genre mode
                     genreLoading ? (
                         <div className="flex items-center justify-center pt-30">
                             <BareLoading loading={genreLoading} />
                         </div>
                     ) : genreResults?.length > 0 ? (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-                                {genreResults.map((anime) => (
-                                    <div key={anime.anilistId} className="w-full">
-                                        <AnimeCard
-                                            anime={anime}
-                                            entry={entries.find(e => e.anilistId === anime.anilistId)}
-                                            onEntryChange={updateEntry}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                                <p className="text-zinc-500 text-sm tracking-wide text-center pt-10">
-                                    No anime found for <span className="text-purple-400">{activeGenre}</span>
-                                </p>
-                            )
+                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {genreResults.map((anime) => (
+                                <div key={anime.anilistId} className="w-full">
+                                    <AnimeCard
+                                        anime={anime}
+                                        entry={entries.find(e => e.anilistId === anime.anilistId)}
+                                        onEntryChange={updateEntry}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-zinc-500 text-sm tracking-wide text-center pt-10">
+                            No anime found for <span className="text-purple-400">{activeGenre}</span>
+                        </p>
+                    )
                 )}
 
             </div>

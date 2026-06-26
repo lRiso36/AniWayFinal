@@ -1,15 +1,14 @@
 import type { AnimeType } from "../types/AnimeType";
 import type { UserAnimeEntry, UserAnimeStatus } from "../types/UserAnimeEntry";
-import { useState, useRef, useEffect } from "react";
 import { AnimeCardMenu } from "./AnimeCardMenu";
 import { LogModal } from "./LogModal";
 import { RemoveModal } from "./RemoveModal";
-import { toggleIsFavorite } from "../services/userAnimeService";
 import { useNavigate } from "react-router-dom";
 import { RateReviewModal } from "./RateReviewModal";
 import { AddToListModal } from "./AddToListsModal";
 import { CreateListModal } from "./MyListsComponents/CreateListModal";
 import toast from "react-hot-toast";
+import { useAnimeCard } from "../hooks/anime/useAnimeCard";
 
 type AnimeCardType = {
   anime: AnimeType;
@@ -34,46 +33,18 @@ export const AnimeCard = ({ anime, entry, onEntryChange, readOnly = false }: Ani
     },
     { label: "📋 Add to List", id: "list" },
   ];
-  const canRemove = entry ? true : false;
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [openLeft, setOpenLeft] = useState(false);
-  const [activeModal, setActiveModal] = useState<'log' | 'favorite' | 'remove' | 'rate-review' | 'list' | 'create-list' | null>(null);
+  const canRemove = !!entry;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [])
-
-  const toggleFavorite = async () => {
-    const prev = entry ?? null;
-    const optimistic: UserAnimeEntry = entry
-      ? { ...entry, isFavorite: !entry.isFavorite }
-      : {
-        anilistId: anime.anilistId,
-        status: 'completed',
-        currentEpisode: anime.episodes ?? 0,
-        score: null,
-        isFavorite: true,
-        startDate: null,
-        finishDate: null
-      };
-
-    onEntryChange?.(optimistic, anime.anilistId)
-    try {
-      await toggleIsFavorite(anime.anilistId, anime.episodes)
-    } catch (error) {
-      onEntryChange?.(prev, anime.anilistId)
-      toast.error("Failed to update favorite, please try again")
-    }
-  }
+  const {
+    menuOpen, setMenuOpen,
+    openLeft,
+    activeModal, setActiveModal,
+    menuRef,
+    handleMenuOpen,
+    toggleFavorite
+  } = useAnimeCard(anime, entry, onEntryChange)
 
   return (
     <div ref={menuRef} className="flex flex-col gap-2 relative">
@@ -88,17 +59,7 @@ export const AnimeCard = ({ anime, entry, onEntryChange, readOnly = false }: Ani
         {!readOnly && (
           <div className="absolute top-1 right-1 z-20">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!menuOpen) {
-                  const pos = menuRef.current?.getBoundingClientRect();
-                  if (pos) {
-                    const spaceeOnRight = window.innerWidth - pos.right;
-                    setOpenLeft(spaceeOnRight < 200);
-                  }
-                }
-                setMenuOpen(!menuOpen)
-              }}
+              onClick={handleMenuOpen}
               className="w-6 h-7 lg:w-8 lg:h-9 flex items-center justify-center text-white bg-black/50 hover:bg-black/80 transition-colors rounded-md"
             >
               <svg width="16" height="16" viewBox="0 0 26 26" fill="currentColor"

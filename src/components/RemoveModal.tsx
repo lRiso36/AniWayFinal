@@ -1,8 +1,6 @@
 import type { AnimeType } from "../types/AnimeType"
 import type { UserAnimeEntry } from "../types/UserAnimeEntry"
-import { removeAnime } from "../services/userAnimeService"
-import toast from "react-hot-toast"
-import { useState } from "react"
+import { useRemoveAnime } from "../hooks/anime/useRemoveAnime"
 
 type RemoveModalTypes = {
     isOpen: boolean,
@@ -13,19 +11,7 @@ type RemoveModalTypes = {
 }
 
 export const RemoveModal = ({ isOpen, onClose, anime, currentEntry, onSave }: RemoveModalTypes) => {
-    const [isRemoving, setIsRemoving] = useState(false);
-
-    const handleSave = async () => {
-        setIsRemoving(true);
-        try {
-            await removeAnime(anime.anilistId);
-            onSave();
-        } catch (error) {
-            toast.error("Failed to remove anime, please try again")
-        } finally {
-            setIsRemoving(false);
-        }
-    }
+    const { isRemoving, handleRemove } = useRemoveAnime(anime.anilistId, onSave);
 
     if (!isOpen) return null;
 
@@ -74,7 +60,7 @@ export const RemoveModal = ({ isOpen, onClose, anime, currentEntry, onSave }: Re
                     </div>
                 </div>
                 <button
-                    onClick={handleSave}
+                    onClick={handleRemove}
                     disabled={isRemoving}
                     className={`w-full bg-red-600 hover:bg-red-500 text-white text-base sm:text-lg font-semibold py-2.5 rounded-lg transition-colors ${isRemoving ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >

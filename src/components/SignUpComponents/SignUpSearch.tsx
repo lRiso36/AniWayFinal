@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { AnimeType } from "../../types/AnimeType";
-import { searchAnime } from "../../cache/animeCache";
 import { SignUpAnimeCard } from "./SignUpAnimeCard";
-import { toastError } from "../../lib/toast";
+import { useSignupAnimeSearch } from "../../hooks/anime/useSignUpAnimeSearch";
 
 type onSelectType = {
     onSelect: (anime: AnimeType) => void
@@ -11,24 +10,7 @@ type onSelectType = {
 
 export const AnimeSearch = ({ onSelect, selectedAnimes }: onSelectType) => {
     const [query, setQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<AnimeType[]>([]);
-    useEffect(() => {
-        if (query.length < 3) {
-            setSearchResults([]);
-            return
-        }
-
-        const timeout = setTimeout(async () => {
-            try {
-                const results = await searchAnime(query);
-                setSearchResults(results);
-            } catch {
-                toastError(`Unable to get results for ${query.trim()}. Try again later.`)
-            }
-        }, 500)
-
-        return () => clearTimeout(timeout);
-    }, [query])
+    const { searchResults } = useSignupAnimeSearch(query);
 
     return (
         <div className="space-y-3">

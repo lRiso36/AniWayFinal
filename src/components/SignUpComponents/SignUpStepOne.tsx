@@ -2,6 +2,7 @@
 import { checkUsernameAvailable, checkEmailAvailable } from "../../services/authServices";
 import type { AnimeType } from "../../types/AnimeType";
 import { useState, useEffect } from "react";
+import { useSignUpValidation } from "../../hooks/useSignUpValidation";
 
 type SignUpSTepOneType = {
     formData: {
@@ -32,93 +33,28 @@ type SignUpSTepOneType = {
 }
 
 export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextStep }: SignUpSTepOneType) => {
-    // checks and balances fr
-    const passwordsMatch =
-        formData.password === formData.confirmPassword;
-    const passwordsFilled =
-        formData.password.length > 0 &&
-        formData.confirmPassword.length > 0;
-    const passwordLengthValid = formData.password.length >= 8;
-    const passwordHasNumber = /\d/.test(formData.password);
-    const passwordHasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password);
-    const validPassword = passwordLengthValid && passwordHasSpecialChar && passwordHasNumber;
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-    const usernameValid = formData.username.length >= 3 &&
-        formData.username.length <= 20 &&
-        /^[a-zA-Z0-9_]+$/.test(formData.username);
-
-    const [usernameError, setUsernameError] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const approved =
-        passwordsMatch
-        && validPassword
-        && emailValid
-        && agreed
-        && !usernameError
-        && !emailError
-        && usernameValid
-        ;
-
-    useEffect(() => {
-        if (!formData.username) {
-            setUsernameError('');
-            return;
-        }
-        if (formData.username.length < 3) {
-            setUsernameError('Username must be at least 3 characters');
-            return;
-        }
-        if (formData.username.length > 20) {
-            setUsernameError('Username must be under 20 characters');
-            return;
-        }
-        if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-            setUsernameError('Username can only contain letters, numbers and underscores');
-            return;
-        }
-
-        const timer = setTimeout(async () => {
-            try {
-                const available = await checkUsernameAvailable(formData.username);
-                if (!available) setUsernameError('Username is already taken');
-                else setUsernameError('');
-            } catch {
-                setUsernameError('');
-            }
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [formData.username]);
-
-    useEffect(() => {
-        if (!formData.email) {
-            setEmailError('');
-            return;
-        }
-        
-        const email = formData.email;
-
-        const timer = setTimeout(async () => {
-            try {
-                const availableEmail = await checkEmailAvailable(email);
-                if (!availableEmail) setEmailError('Email already used for an account');
-                else setEmailError('');
-            } catch {
-                setEmailError('');
-            }
-        }, 300)
-
-        return () => clearTimeout(timer);
-    }, [formData.email]);
-
-    // function
+    const {
+        usernameError,
+        emailError,
+        passwordsMatch,
+        passwordsFilled,
+        passwordLengthValid,
+        passwordHasNumber,
+        passwordHasSpecialChar,
+        emailValid,
+        approved
+    } = useSignUpValidation(
+        formData.username,
+        formData.email,
+        formData.password,
+        formData.confirmPassword,
+        agreed,
+    )
+    
     async function handleSubmit() {
-        if (
-            approved
-        ) {
-            nextStep();
-        }
+        if (approved) nextStep();
     }
+
     return (
         <div className="space-y-5">
             <div className="space-y-1">

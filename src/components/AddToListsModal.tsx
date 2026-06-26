@@ -1,9 +1,6 @@
 import type { AnimeType } from "../types/AnimeType"
-import { useState, useEffect } from "react"
-import { getUserLists } from "../services/userListsService"
+import { useState } from "react"
 import type { ListType } from "../types/ListType"
-import { addAnimeToList } from "../services/userListsService"
-import { toastError } from "../lib/toast"
 import { useAddToList } from "../hooks/lists/useAddToList"
 
 type AddToListModalType = {
@@ -18,13 +15,13 @@ export const AddToListModal = ({ isOpen, onClose, animeToAdd, onSave, onCreateLi
     const [currentTab, setCurrentTab] = useState<"public" | "private">("public");
     const [listSearch, setListSearch] = useState('');
     const [listToAdd, setListToAdd] = useState<ListType | null>(null);
-    
-    const {userLists, loading, error, handleSave} = useAddToList(
-        animeToAdd.anilistId, 
-        onSave, 
+
+    const { userLists, loading, error, handleSave } = useAddToList(
+        animeToAdd.anilistId,
+        onSave,
         onClose
     );
-   
+
     const publicLists = userLists?.filter(list => list.isPublic);
     const privateLists = userLists?.filter(list => !list.isPublic);
     const currentLists = currentTab === 'public' ? publicLists : privateLists;

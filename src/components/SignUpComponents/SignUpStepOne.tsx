@@ -1,7 +1,5 @@
 // STILL NEED DATABASE STUFF
-import { checkUsernameAvailable, checkEmailAvailable } from "../../services/authServices";
 import type { AnimeType } from "../../types/AnimeType";
-import { useState, useEffect } from "react";
 import { useSignUpValidation } from "../../hooks/useSignUpValidation";
 
 type SignUpSTepOneType = {

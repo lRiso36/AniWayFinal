@@ -26,7 +26,7 @@ export const RatingSlider = ({value, onChange}: RatingSliderType) => {
                     step={0.1}
                     value={value ?? 5}
                     onChange={(e) => onChange(Number(e.target.value))}
-                    className="flex-1 accent-purple-600 outline-none"
+                    className="flex-1 accent-purple-600 outline-none appearance-none"
                 />  
             </div>
             <div className="flex justify-between">

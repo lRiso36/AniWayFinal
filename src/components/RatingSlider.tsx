@@ -8,7 +8,7 @@ export const RatingSlider = ({value, onChange}: RatingSliderType) => {
     
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex-items-center justify=between"> 
+            <div className="flex-items-center justify-between"> 
                 <label className="text-white/40 text-xs sm:text-sm uppercase tracking-wide">
                 Your Rating : </label>
                 {value !== null ? (
@@ -26,7 +26,7 @@ export const RatingSlider = ({value, onChange}: RatingSliderType) => {
                     step={0.1}
                     value={value ?? 5}
                     onChange={(e) => onChange(Number(e.target.value))}
-                    className="flex-1 accent-purple-600"
+                    className="flex-1 accent-purple-600 outline-none"
                 />  
             </div>
             <div className="flex justify-between">

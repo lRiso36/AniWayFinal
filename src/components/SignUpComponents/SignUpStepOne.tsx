@@ -1,6 +1,8 @@
 // STILL NEED DATABASE STUFF
 import type { AnimeType } from "../../types/AnimeType";
 import { useSignUpValidation } from "../../hooks/useSignUpValidation";
+import { useState } from "react";
+import { TermsModal } from "./TermsModal";
 
 type SignUpSTepOneType = {
     formData: {
@@ -31,6 +33,7 @@ type SignUpSTepOneType = {
 }
 
 export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextStep }: SignUpSTepOneType) => {
+    const [tosOpen, setTosOpen] = useState(false);
     const {
         usernameError,
         emailError,
@@ -227,12 +230,15 @@ export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextSt
                 />
                 <label
                     htmlFor="agree"
+                    onClick={()=> setTosOpen(true)}
                     className="text-xs sm:text-base text-zinc-500 leading-relaxed">
                     I agree to the
                     <span className="text-purple-400 cursor-pointer hover:underline">
                         Terms of Service</span>
                 </label>
             </div>
+
+            {tosOpen && <TermsModal onClose={() => setTosOpen(false)} />}
 
             {/* ADD FORGOT PASSWORD STUFF */}
             {/* button */}

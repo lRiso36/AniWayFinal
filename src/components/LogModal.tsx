@@ -82,19 +82,30 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
                         {status === 'watching' && (
                             <div className="flex flex-col gap-1">
                                 <label className="text-white/40 text-xs uppercase tracking-wide">Current Episode</label>
-                                <select
-                                    value={currentEpisode}
-                                    onChange={(e) => handleEpisodeChange(Number(e.target.value), setStatus, setCurrentEpisode)}
-                                    className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full"
-                                >
-                                    <option value={0}>Not Started</option>
-                                    {anime.episodes
-                                        ? Array.from({ length: anime.episodes }, (_, i) => i + 1).map((ep) => (
-                                            <option key={ep} value={ep}>Episode {ep}</option>
-                                        ))
-                                        : <option value={0}>Unknown episodes</option>
-                                    }
-                                </select>
+                                <div className="relative w-full">
+                                    <select
+                                        value={currentEpisode}
+                                        onChange={(e) => handleEpisodeChange(Number(e.target.value), setStatus, setCurrentEpisode)}
+                                        className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full appearance-none pr-8"
+                                    >
+                                        <option value={0}>Not Started</option>
+                                        {anime.episodes
+                                            ? Array.from({ length: anime.episodes }, (_, i) => i + 1).map((ep) => (
+                                                <option key={ep} value={ep}>Episode {ep}</option>
+                                            ))
+                                            : <option value={0}>Unknown episodes</option>
+                                        }
+                                    </select>
+                                    <svg
+                                        className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                    >
+                                        <path d="M6 9l6 6 6-6" />
+                                    </svg>
+                                </div>
                             </div>
                         )}
                         {status === 'completed' && (

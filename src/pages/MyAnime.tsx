@@ -28,14 +28,15 @@ export const MyAnime = () => {
             py-8 
             flex 
             flex-col 
-            gap-8 
-            w-full">
+            gap-8
+            w-full
+            ">
                 <h2 className="ml-3 text-white text-2xl font-bold">My Anime</h2>
                 <MyAnimeNavBar />
 
                 <div>
                     {tab === "overview" && (
-                        <div>
+                        <div className="-mt-3">
                             <MyAnimeConatiner
                                 title="Watching"
                                 items={watching}

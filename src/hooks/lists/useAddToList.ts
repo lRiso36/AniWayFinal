@@ -33,8 +33,8 @@ export const useAddToList = (
             await addAnimeToList(listToAdd.id, animeId);
             onSave();
             onClose();
-        } catch (error: any) {
-            if (error.message?.includes('unique') || error.message?.includes('duplicate')) {
+        } catch (error) {
+            if (error instanceof Error && (error.message.includes('unique') || error.message.includes('duplicate'))) {
                 setError('This anime is already in that list');
             } else {
                 setError('Failed to add anime to list');

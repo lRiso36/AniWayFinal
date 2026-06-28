@@ -20,8 +20,8 @@ export const Login = () => {
         try {
             await logIn(formData.email, formData.password);
             navigate("/home");
-        } catch (error: any) {
-            setError(error.message || "Unable to log in. Try again.");
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Unable to log in. Try again.");
         }
     }
 

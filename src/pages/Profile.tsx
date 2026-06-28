@@ -1,12 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useParams } from "react-router-dom";
-import { getProfile } from "../services/profileService";
-import type { ProfileType } from "../types/ProfileType";
 import { ProfileHeader } from "../components/ProfileComponents/ProfileHeader";
 import { useSearchParams } from "react-router-dom";
 import { ProfileNavBar } from "../components/ProfileComponents/ProfileNavBar";
 import { ProfileAnime } from "../components/ProfileComponents/ProfileAnimeComponent";
-import { followUser, getIsFollowing, unfollowUser } from "../services/followService";
 import { useAuth } from "../context/Authcontext";
 import { ProfileFollowers } from "../components/ProfileComponents/ProfileFollowers";
 import { ProfileFollowing } from "../components/ProfileComponents/ProfileFollowing";
@@ -14,94 +11,24 @@ import { ProfileReviews } from "../components/ProfileComponents/ProfileReviews";
 import { EditProfileModal } from "../components/ProfileComponents/EditProfileModal";
 import { ProfileLists } from "../components/ProfileComponents/ProfileLists";
 import { Loading } from "../components/Loading";
-import toast from "react-hot-toast";
+import { useProfile } from "../hooks/profile/useProfile";
 
 export const Profile = () => {
     const { username: currentUser } = useAuth();
     const { username } = useParams();
-    const [isLoading, setIsLoading] = useState(true);
-    const [profileData, setProfileData] = useState<ProfileType | null>(null);
     const [searchParams, setSearchParams] = useSearchParams();
-    const [isFollowing, setIsFollowing] = useState(false);
-    const tab = searchParams.get("tab") || "anime";
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [error, setError] = useState(false);
-    const [followStatusError, setFollowStatusError] = useState(false);
-    const [isFollowLoading, setIsFollowLoading] = useState(false);
+    const tab = searchParams.get("tab") || "anime";
+
+    const {
+        isLoading, profileData, setProfileData,
+        isFollowing, error, followStatusError,
+        handleFollowClick,
+    } = useProfile(username, currentUser);
 
     const handleEditClick = () => {
         setEditModalOpen(true);
     }
-
-    const handleFollowClick = async () => {
-        if (!profileData || isFollowLoading) return;
-
-        const previousIsFollowing = isFollowing;
-        const previousProfileData = profileData;
-
-        setIsFollowLoading(true);
-
-        if (isFollowing) {
-            setIsFollowing(false);
-            setProfileData(prev => prev ? { ...prev, followers: prev.followers - 1 } : prev)
-
-            try {
-                await unfollowUser(profileData.id);
-            } catch (err) {
-                setIsFollowing(previousIsFollowing);
-                setProfileData(previousProfileData);
-                toast.error("Failed to unfollow, please try again")
-            }
-        } else {
-            setIsFollowing(true);
-            setProfileData(prev => prev ? { ...prev, followers: prev.followers + 1 } : prev)
-
-            try {
-                await followUser(profileData.id);
-            } catch (err) {
-                setIsFollowing(previousIsFollowing);
-                setProfileData(previousProfileData);
-                toast.error("Failed to follow, please try again");
-            }
-        }
-
-        setIsFollowLoading(false);
-    }
-
-    const fetchProfileData = async () => {
-        if (!username) return;
-        setIsLoading(true)
-        try {
-            const data = await getProfile(username);
-            setProfileData(data);
-        } catch (err) {
-            toast.error("Failed to load profile")
-            setError(true);
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    const fetchIsFollowing = async () => {
-        if (!username || !profileData) return
-        if (currentUser === username) return
-
-        try {
-            const result = await getIsFollowing(profileData.id);
-            setIsFollowing(result);
-        } catch (err) {
-            toast.error("Failed to load follow status")
-            setFollowStatusError(true);
-        }
-    }
-
-    useEffect(() => {
-        fetchProfileData();
-    }, [username])
-
-    useEffect(() => {
-        fetchIsFollowing();
-    }, [profileData?.id])
 
     if (isLoading) return <Loading loading={isLoading} />
 

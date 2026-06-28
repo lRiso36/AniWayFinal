@@ -1,76 +1,16 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { searchUsers } from "../services/followService";
-import { toastError } from "../lib/toast";
 import { Avatar } from "../components/Avatar";
-
-const RECENTS_KEY = "recentMemberSearches";
-const MAX_RECENTS = 8;
-
-type SearchUser = {
-    id: string;
-    username: string;
-    display_name: string | null;
-    avatar: string | null;
-}
+import { useMemberSearch } from "../hooks/useMemberSearch";
+import type { FollowUser } from "../types/FollowUser";
 
 export const Members = () => {
-    const [query, setQuery] = useState('');
-    const [results, setResults] = useState<SearchUser[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [recents, setRecents] = useState<SearchUser[]>([]);
-    const navigate = useNavigate();
-
-
-    useEffect(() => {
-        const stored = localStorage.getItem(RECENTS_KEY);
-        if (stored) {
-            try {
-                setRecents(JSON.parse(stored));
-            } catch {
-                setRecents([]);
-                toastError("Unable to get recent searches")
-            }
-        }
-    }, []);
-
-    useEffect(() => {
-        if (query.trim().length === 0) {
-            setResults([]);
-            setLoading(false);
-            return;
-        }
-
-        setLoading(true);
-
-        const timer = setTimeout(async () => {
-            try {
-                const data = await searchUsers(query.trim());
-                setResults(data ?? []);
-            } catch {
-                toastError("Unable to search users at this time. Please try again later.")
-            } finally {
-                setLoading(false);
-            }
-        }, 300)
-
-        return () => clearTimeout(timer);
-    }, [query]);
-
-    const handleSelect = (user: SearchUser) => {
-        //add to recents
-        const updated = [user, ...recents.filter(u => u.id !== user.id)].slice(0, MAX_RECENTS);
-        setRecents(updated);
-        localStorage.setItem(RECENTS_KEY, JSON.stringify(updated));
-
-        navigate(`/profile/${user.username}`);
-    }
-
-    const handleClearRecents = () => {
-        setRecents([]);
-        localStorage.removeItem(RECENTS_KEY);
-    }
-
+    const {
+        query, setQuery,
+        results,
+        loading,
+        recents,
+        handleSelect,
+        handleClearRecents
+    } = useMemberSearch();
     const showingResults = query.trim().length > 0;
 
     return (
@@ -134,7 +74,7 @@ export const Members = () => {
     )
 }
 
-const UserRow = ({ user, onClick }: { user: SearchUser, onClick: () => void }) => (
+const UserRow = ({ user, onClick }: { user: FollowUser, onClick: () => void }) => (
     <div
         onClick={onClick}
         className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"

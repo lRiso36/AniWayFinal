@@ -17,9 +17,9 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
     const [currentEpisode, setCurrentEpisode] = useState<number>(currentEntry?.currentEpisode ?? 0);
     const [score, setScore] = useState<number | null>(currentEntry?.score ?? null);
     const {
-        isSaving, 
-        handleSave, 
-        handleStatusChange, 
+        isSaving,
+        handleSave,
+        handleStatusChange,
         handleEpisodeChange
     } = useLogModal(anime, currentEntry, onSave);
 
@@ -59,17 +59,25 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
                                 {anime.episodes} episodes
                             </p>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-white/40 text-xs uppercase tracking-wide">Status</label>
+                        <div className="relative w-full">
                             <select
                                 value={status}
                                 onChange={(e) => handleStatusChange(e.target.value as UserAnimeStatus, setStatus, setCurrentEpisode)}
-                                className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full appearance-none"
+                                className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full appearance-none pr-8"
                             >
                                 <option value="watching">Watching</option>
                                 <option value="completed">Completed</option>
                                 <option value="plan-to-watch">Plan to Watch</option>
                             </select>
+                            <svg
+                                className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                            >
+                                <path d="M6 9l6 6 6-6" />
+                            </svg>
                         </div>
                         {status === 'watching' && (
                             <div className="flex flex-col gap-1">
@@ -77,7 +85,7 @@ export const LogModal = ({ isOpen, onClose, currentEntry, anime, onSave }: LogMo
                                 <select
                                     value={currentEpisode}
                                     onChange={(e) => handleEpisodeChange(Number(e.target.value), setStatus, setCurrentEpisode)}
-                                    className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full appearance-none"
+                                    className="bg-[#2a2a3e] text-white text-xs sm:text-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 border border-white/10 w-full"
                                 >
                                     <option value={0}>Not Started</option>
                                     {anime.episodes

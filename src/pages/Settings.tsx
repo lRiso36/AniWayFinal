@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Authcontext";
-import { checkEmailAvailable, updatePassword, updateEmail } from "../services/authServices";
-import toast from "react-hot-toast";
+import { updatePassword } from "../services/authServices";
+import { useSettings } from "../hooks/settings/useSettings";
 
 export const Settings = () => {
-    const { logout, username, user } = useAuth();
-    const navigate = useNavigate();
+    const { username } = useAuth();
+    const { user, handleLogout, handleEmailChange } = useSettings();
 
     const [showEmailForm, setShowEmailForm] = useState(false);
     const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -20,33 +19,18 @@ export const Settings = () => {
     const [emailError, setEmailError] = useState<string | null>(null);
     const [passwordError, setPasswordError] = useState<string | null>(null);
 
-    const handleLogout = async () => {
-        try {
-            await logout();
-            navigate('/');
-        } catch (err) {
-            toast.error("Failed to log out, please try again")
-        }
-    }
-
-    const handleEmailChange = async () => {
+    const handleEmailSubmit = async () => {
         if (!newEmail.trim()) return;
         setEmailLoading(true);
         setEmailError(null);
         setEmailMessage(null);
-
         try {
-            const isAvailable = await checkEmailAvailable(newEmail.trim());
-            if (!isAvailable) {
-                setEmailError('That email is already in use');
-                return;
-            }
-            await updateEmail(user!.id, newEmail.trim());
+            await handleEmailChange(newEmail.trim());
             setEmailMessage('Check both your old and new email for a confirmation link.');
             setNewEmail('');
             setShowEmailForm(false);
-        } catch (error: any) {
-            setEmailError(error.message || "Something went wrong, please try again");
+        } catch (error) {
+            setEmailError(error instanceof Error ? error.message : "Something went wrong, please try again");
         } finally {
             setEmailLoading(false);
         }
@@ -55,22 +39,10 @@ export const Settings = () => {
     const handlePasswordChange = async () => {
         if (!newPassword.trim()) return;
 
-        if (newPassword.length < 8) {
-            setPasswordError('Password must be at least 8 characters');
-            return;
-        }
-        if (!/[0-9]/.test(newPassword)) {
-            setPasswordError('Password must contain at least one number');
-            return;
-        }
-        if (!/[^a-zA-Z0-9]/.test(newPassword)) {
-            setPasswordError('Password must contain at least one special character');
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            setPasswordError('Passwords do not match');
-            return;
-        }
+        if (newPassword.length < 8) { setPasswordError('Password must be at least 8 characters'); return; }
+        if (!/[0-9]/.test(newPassword)) { setPasswordError('Password must contain at least one number'); return; }
+        if (!/[^a-zA-Z0-9]/.test(newPassword)) { setPasswordError('Password must contain at least one special character'); return; }
+        if (newPassword !== confirmPassword) { setPasswordError('Passwords do not match'); return; }
 
         setPasswordLoading(true);
         setPasswordError(null);
@@ -82,8 +54,8 @@ export const Settings = () => {
             setNewPassword('');
             setConfirmPassword('');
             setShowPasswordForm(false);
-        } catch (error: any) {
-            setPasswordError(error.message || "Something went wrong, please try again");
+        } catch (error) {
+            setPasswordError(error instanceof Error ? error.message : "Something went wrong, please try again");
         } finally {
             setPasswordLoading(false);
         }
@@ -126,7 +98,7 @@ export const Settings = () => {
                                     />
                                     {emailError && <p className="text-red-400 text-xs">{emailError}</p>}
                                     <button
-                                        onClick={handleEmailChange}
+                                        onClick={handleEmailSubmit}
                                         disabled={emailLoading}
                                         className="w-full bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium py-2 rounded-xl transition-colors disabled:opacity-50"
                                     >

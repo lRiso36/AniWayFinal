@@ -20,7 +20,7 @@ export const ForgotPassword = () => {
             await forgotPassword(email.trim());
             setSent(true);
         } catch (err: any) {
-            setError(err.message || "Unable to send email right now. Try again later.");
+            setError(err instanceof Error ? err.message : "Unable to send email right now. Try again later.");
         } finally {
             setLoading(false);
         }

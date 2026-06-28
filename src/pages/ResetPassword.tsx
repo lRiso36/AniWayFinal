@@ -50,8 +50,8 @@ export const ResetPassword = () => {
         try {
             await updatePassword(password);
             navigate('/login');
-        } catch (err: any) {
-            setError(err.message || "Something went wrong, please try again");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Something went wrong, please try again");
         }
         setLoading(false);
     }

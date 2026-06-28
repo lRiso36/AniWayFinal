@@ -32,6 +32,7 @@ export const SignUp = () => {
         if (loading) return;
 
         if (step === 3) {
+            setLoading(true);
             try {
                 await signUp(
                     formData.username,
@@ -49,9 +50,9 @@ export const SignUp = () => {
                     navigate("/home")
                 }, 2000)
 
-            } catch (error: any) {
+            } catch (error) {
                 console.error('Full error:', error); // see exactly what's failing
-                toastError(error.message || "Failed to create account");
+                toastError(error instanceof Error ? error.message : "Failed to create account");
             } finally {
                 setLoading(false)
             }

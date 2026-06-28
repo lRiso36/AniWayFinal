@@ -1,49 +1,18 @@
-import { useState, useEffect } from "react"
-import { getFeed, deletePost } from "../services/postService"
+import { useState } from "react"
+import { getFeed } from "../services/postService"
 import { PostCard } from "../components/PostComponents/postCard"
 import { CreatePostModal } from "../components/PostComponents/CreatePostModal"
 import { useAuth } from "../context/Authcontext"
-import { toastError } from "../lib/toast"
 import { Avatar } from "../components/Avatar"
+import { useFeed } from "../hooks/posts/useFeed"
+import { toastError } from "../lib/toast"
 
 export const MainFeed = () => {
     const [filter, setFilter] = useState<'everyone' | 'following'>('everyone');
-    const [posts, setPosts] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const { avatar, username } = useAuth();
 
-    const fetchPosts = async (reset: boolean) => {
-        if (reset) setIsLoading(true);
-        else setIsLoadingMore(true);
-
-        const cursor = reset ? undefined : posts[posts.length - 1]?.created_at;
-        try {
-            const data = await getFeed(filter, cursor);
-            if (reset) setPosts(data);
-            else setPosts(prev => [...prev, ...data]);
-            setHasMore(data.length === 20);
-        } catch {
-            toastError("We are unable to get posts right now. Try again later.")
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchPosts(true);
-    }, [filter]);
-
-    const handlePostDeleted = async (postId: string) => {
-        try {
-            const success = await deletePost(postId);
-            if (success) setPosts(prev => prev.filter(p => p.id !== postId));
-        } catch {
-            toastError("Unable to delete post right now. Try again later.")
-        }
-    }
+    const { posts, setPosts, isLoading, isLoadingMore, hasMore, fetchPosts, handlePostDeleted } = useFeed(filter);
 
     return (
         <div className="min-h-screen bg-[#0a0a14]">
@@ -67,8 +36,12 @@ export const MainFeed = () => {
                         onClose={() => setModalOpen(false)}
                         onPostCreated={async () => {
                             setModalOpen(false);
-                            const freshFeed = await getFeed('everyone', undefined)
-                            setPosts(freshFeed ?? []);
+                            try {
+                                const freshFeed = await getFeed('everyone', undefined);
+                                setPosts(freshFeed ?? []);
+                            } catch {
+                                toastError("Unable to refresh feed. Try again later or manually refresh.");
+                            }
                         }}
                     />
                 )}
@@ -114,7 +87,7 @@ export const MainFeed = () => {
                     <button
                         onClick={() => fetchPosts(false)}
                         disabled={isLoadingMore}
-                        className="text-white/40 hover:text-white/70 text-sm py-3 transition-colors disabled:opacity-50"
+                        className="text-purple-400 hover:text-purple-300 text-sm py-3 transition-colors disabled:opacity-50"
                     >
                         {isLoadingMore ? 'Loading...' : 'Load more'}
                     </button>

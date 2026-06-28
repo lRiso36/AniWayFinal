@@ -1,39 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
-import type { ListDetailType } from "../types/ListType";
-import { getListById } from "../services/userListsService";
 import { useAuth } from "../context/Authcontext";
 import { AnimeCard } from "../components/AnimeCard";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
 import { useListLike } from "../hooks/useListLike";
-import { toastError } from "../lib/toast";
 import { Loading } from "../components/Loading";
+import { useListDetail } from "../hooks/lists/newListDetail";
 
 export const ListDetail = () => {
     const { listId } = useParams();
     const { user } = useAuth();
-    const [list, setList] = useState<ListDetailType | null>(null);
-    const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
 
+    const { list, loading, fetchList } = useListDetail(listId)
     const { likeCount, isLiked, handleLike } = useListLike(listId ?? '');
-
-    const fetchList = async () => {
-        if (!listId) return;
-        
-        try {
-            const data = await getListById(listId);
-            setList(data);
-        } catch {
-            toastError("Unable to get list data right now. Try again later.")
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchList();
-    }, [listId]);
 
     const isOwner = user?.id === list?.userId;
 
@@ -91,8 +71,8 @@ export const ListDetail = () => {
                                         handleLike()
                                     }}
                                     className={`flex items-center gap-1.5 px-2 -mb-2 rounded-lg text-xl sm:text-3xl font-medium transition-colors border ${isLiked
-                                            ? 'bg-pink-500/20 border-pink-500/30 text-pink-400'
-                                            : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                                        ? 'bg-pink-500/20 border-pink-500/30 text-pink-400'
+                                        : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
                                         }`}
                                 >
                                     {isLiked ? '♥' : '♡'}

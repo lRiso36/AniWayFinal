@@ -1,66 +1,34 @@
 import { MyListsNavBar } from "../components/MyListsComponents/MyListsNav";
 import { useSearchParams } from "react-router-dom"
 import { ListsContainer } from "../components/MyListsComponents/ListContainer";
-import type { ListType } from "../types/ListType";
-import { useState, useEffect } from "react";
-import { getLikedLists, getUserLists } from "../services/userListsService";
+import { useState } from "react";
 import { CreateListModal } from "../components/MyListsComponents/CreateListModal";
 import { useAuth } from "../context/Authcontext";
 import { Loading } from "../components/Loading";
-import toast from "react-hot-toast";
+import { toastError } from "../lib/toast";
+import { useMyLists } from "../hooks/lists/useMyLists";
 
 export const MyLists = () => {
     const { user } = useAuth();
     const [searchParams] = useSearchParams();
     const tab = searchParams.get("tab") || "all-lists";
-    const [lists, setLists] = useState<ListType[]>([]);
-    const [likedLists, setLikedLists] = useState<ListType[]>([]);
     const [createActive, setCreateActive] = useState(false);
-    const [loading, setLoading] = useState(true);
 
-    const fetchUserListData = async () => {
-        try {
-            const data = await getUserLists();
-            setLists(data);
-        } catch (err) {
-            toast.error("Failed to get user lists")
-        }
-    }
-
-    const fetchLikedLists = async () => {
-        try {
-            const data = await getLikedLists();
-            setLikedLists(data);
-        } catch (err) {
-            toast.error("Failed to get liked lists")
-        }
-    }
-
-    useEffect(() => {
-        const fetchAll = async () => {
-            try {
-                await Promise.all([fetchUserListData(), fetchLikedLists()])
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchAll();
-    }, []);
+    const {
+        lists, likedLists,
+        loading, fetchUserLists,
+        handleDelete
+    } = useMyLists()
 
     const saveData = async () => {
         try {
-            await fetchUserListData();
+            await fetchUserLists();
         } catch (err) {
-            toast.error("List created but failed to refresh, please reload the page");
+            toastError("List created but failed to refresh, please reload the page");
         } finally {
             setCreateActive(false);
         }
     }
-
-    const handleDelete = (listId: string) => {
-        setLists(prev => prev.filter(l => l.id !== listId));
-    }
-
     const ownedByMe = lists.filter(list => list.userId === user?.id)
 
     if (loading) return (
@@ -99,13 +67,13 @@ export const MyLists = () => {
                                 lists={ownedByMe}
                                 title="Owned By Me"
                                 onDelete={handleDelete}
-                                onEditSave={fetchUserListData}
+                                onEditSave={fetchUserLists}
                             />
                             <ListsContainer
                                 lists={likedLists}
                                 title="Liked"
                                 onDelete={handleDelete}
-                                onEditSave={fetchUserListData}
+                                onEditSave={fetchUserLists}
                             />
                         </div>
                     }
@@ -114,7 +82,7 @@ export const MyLists = () => {
                             <ListsContainer
                                 lists={ownedByMe}
                                 onDelete={handleDelete}
-                                onEditSave={fetchUserListData}
+                                onEditSave={fetchUserLists}
                             />
                         </div>
                     }
@@ -123,7 +91,7 @@ export const MyLists = () => {
                             <ListsContainer
                                 lists={likedLists}
                                 onDelete={handleDelete}
-                                onEditSave={fetchUserListData}
+                                onEditSave={fetchUserLists}
                             />
                         </div>
                     }

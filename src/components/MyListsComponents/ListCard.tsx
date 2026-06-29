@@ -31,10 +31,10 @@ export const ListCard = ({ list, onDelete, onEditSave, onClick }: ListCardType) 
         <>
             <div
                 onClick={onClick}
-                className="rounded-xl overflow-hidden cursor-pointer border border-white/8 hover:border-white/20 transition-colors bg-[#12121f]"
+                className="rounded-xl cursor-pointer border border-white/8 hover:border-white/20 transition-colors bg-[#12121f]"
             >
                 {/* cover images */}
-                <div className="flex h-18 sm:h-30">
+                <div className="flex h-20 sm:h-30 rounded-t-xl overflow-hidden">
                     {list.coverImages && list.coverImages.length > 0 ? (
                         <>
                             {list.coverImages.slice(0, 3).map((cover, index) => (
@@ -50,7 +50,7 @@ export const ListCard = ({ list, onDelete, onEditSave, onClick }: ListCardType) 
                         </>
                     ) : (
                         <div className="flex-1 bg-white/5 flex items-center justify-center">
-                            <p className="text-white/20 text-xs">No anime yet</p>
+                            <p className="text-white/20 text-sm sm:text-base">No anime yet</p>
                         </div>
                     )}
                 </div>
@@ -85,7 +85,7 @@ export const ListCard = ({ list, onDelete, onEditSave, onClick }: ListCardType) 
                                 ) : '···'}
                             </button>
                             {menuOpen && (
-                                <div className="absolute right-0 bottom-8 bg-[#1e1e2e] border border-white/10 rounded-xl shadow-xl w-36 py-1 z-20">
+                                <div className="absolute right-4 bottom-full -mb-2 bg-[#1e1e2e] border border-white/10 rounded-xl shadow-xl w-36 py-1 z-20">
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setMenuOpen(false); handleEditClick(list.id); }}
                                         className="w-full text-left px-4 py-1.5 text-sm text-white/80 hover:bg-white/5 transition-colors"

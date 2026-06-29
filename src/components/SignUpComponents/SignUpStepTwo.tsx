@@ -119,7 +119,7 @@ export const SignUpStepTwo = ({ formData, nextStep, setFormData, prevStep }: Sig
                     type="text"
                     placeholder="Mikasa Ackerman"
                     maxLength={30}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 mt-1 text-white text-sm sm:text-base placeholder-zinc-600 focus:outline-none focus:border-purple-500/60 transition"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 sm:py-3 mt-1 text-white text-sm sm:text-base placeholder-zinc-600 focus:outline-none focus:border-purple-500/60 transition"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                 />
@@ -128,7 +128,7 @@ export const SignUpStepTwo = ({ formData, nextStep, setFormData, prevStep }: Sig
 
             {/* genres */}
             <div className="space-y-1">
-                <p className="text-sm font-medium text-zinc-300">Favorite Genres</p>
+                <p className="text-sm font-medium text-zinc-300 -mt-3 mb-3">Favorite Genres</p>
                 <div className="flex flex-wrap gap-2">
                     {GENRES.map((genre) => (
                         <button

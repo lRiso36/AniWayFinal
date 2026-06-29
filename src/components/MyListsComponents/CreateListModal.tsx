@@ -228,7 +228,6 @@ export const CreateListModal = ({ isOpen, currentInfo, initialAnime, onClose, on
 
             {selectedAnime.length === 0 && animeSearchResults.length === 0 && !searchLoading && (
                 <div className="flex flex-col items-center justify-center py-8 text-white/20">
-                    <p className="text-3xl mb-2">🎌</p>
                     <p className="text-sm">Search for anime to add</p>
                 </div>
             )}

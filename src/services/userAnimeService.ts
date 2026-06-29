@@ -50,7 +50,7 @@ export const logAnime = async (
             currentEpisode,
             episodes,
             score,
-            review
+            review,
         })
     }
 
@@ -62,6 +62,43 @@ export const logAnime = async (
              throw new Error(data.error || 'Failed to log anime')
         }
 
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const updateScoreAndReview = async (
+    anilistId: number,
+    status: UserAnimeStatus,
+    currentEpisode: number,
+    score?: number | null,
+    review?: string | null,
+) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    const options = {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            anilistId,
+            status,
+            currentEpisode,
+            score,
+            review
+        })
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/user/score-review`, options);
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to update score and review');
+        }
     } catch (error) {
         console.error(error);
         throw error;

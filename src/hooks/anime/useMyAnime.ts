@@ -26,11 +26,17 @@ export const useMyAnime = () => {
             if (updated === null) {
                 return prev.filter(item => item.entry.anilistId !== anilistId);
             }
-            return prev.map(item =>
+            return prev
+            .map(item =>
                 item.entry.anilistId === anilistId
-                    ? { ...item, entry: updated }
+                    ? { ...item, entry: { ...updated, updatedAt: new Date().toISOString() } }
                     : item
-            );
+            )
+            .sort((a, b) => {
+                const aDate = a.entry.updatedAt ?? '';
+                const bDate = b.entry.updatedAt ?? '';
+                return bDate.localeCompare(aDate);
+            });
         });
     };
 

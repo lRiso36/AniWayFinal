@@ -8,4 +8,5 @@ export type UserAnimeEntry = {
     startDate: string | null;
     finishDate: string | null;
     isFavorite: boolean;
+    updatedAt?: string;
 }

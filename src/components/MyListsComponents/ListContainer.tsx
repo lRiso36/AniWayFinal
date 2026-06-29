@@ -32,7 +32,7 @@ export const ListsContainer = ({ lists, title, onDelete, onEditSave }: ListsCont
             )}
             <div className="flex flex-wrap gap-4">
                 {lists.map((list) => (
-                    <div key={list.id} className="w-[160px]  sm:w-[220px]">
+                    <div key={list.id} className="w-[180px]  sm:w-[250px]">
                         <ListCard 
                         list={list} 
                         onDelete={() => onDelete?.(list.id)}

@@ -89,7 +89,7 @@ export const Browse = () => {
                 bg-[#1e1e2e]
                 border border-white/10
                 rounded-xl 
-                px-4 py-3
+                px-4 py-2 sm:py-2.5
                 ">
                     {/* search icon */}
                     <svg width="16" height="16"

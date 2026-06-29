@@ -18,7 +18,7 @@ export const Members = () => {
             <div className="max-w-2xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6 w-full">
 
                 {/* search bar */}
-                <div className="flex items-center gap-2 bg-[#12121f] border border-white/10 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2 bg-[#12121f] border border-white/10 rounded-xl px-4 py-2 sm:py-3">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30 shrink-0 sm:w-5 sm:h-5">
                         <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                     </svg>

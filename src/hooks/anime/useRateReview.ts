@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { logAnime, addReview } from "../../services/userAnimeService";
+import { addReview, updateScoreAndReview } from "../../services/userAnimeService";
 import { createPost } from "../../services/postService";
 import { toastError } from "../../lib/toast";
 import { toastSuccess } from "../../lib/toast";
@@ -22,14 +22,13 @@ export const useRateReview = (
     ) => {
         setSaving(true);
         try {
-            await logAnime(
+            await updateScoreAndReview(
                 anime.anilistId,
                 currentEntry?.status ?? 'completed',
                 currentEntry?.currentEpisode ?? anime.episodes ?? 0,
-                anime.episodes ?? undefined,
                 score,
                 review.trim() || null
-            );
+            )
 
             if (review.trim()) {
                 await addReview(anime.anilistId, review.trim());

@@ -105,7 +105,7 @@ export const Login = () => {
                                 border-white/10
                                 rounded-xl
                                 px-4
-                                py-3
+                                py-2 sm:py-3
                                 mt-1
                                 text-white
                                 text-sm
@@ -136,7 +136,8 @@ export const Login = () => {
                                 border-white/10
                                 rounded-xl
                                 px-4
-                                py-3
+                                py-2
+                                sm:py-3
                                 pr-10
                                 sm:pr-15
                                 mt-1
@@ -156,7 +157,7 @@ export const Login = () => {
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="
                                     absolute right-3 sm:right-5 
-                                    top-13 sm:top-13.5 -translate-y-1/2 
+                                    top-12.5 sm:top-13.5 -translate-y-1/2 
                                     text-white/30 hover:text-white/60 
                                     transition-colors"
                                 >
@@ -202,7 +203,8 @@ export const Login = () => {
                             text-white
                             text-sm
                             sm:text-base
-                            mt-4
+                            mt-1
+                            sm:mt-4
                             transition
                             "
                             style={{

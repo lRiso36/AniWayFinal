@@ -75,8 +75,10 @@ export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextSt
                     border 
                     border-white/10 
                     rounded-xl
-                    px-4
-                    py-3
+                    px-3
+                    sm:px-4
+                    py-2
+                    sm:py-3
                     mt-1
                     text-white
                     text-sm
@@ -115,8 +117,10 @@ export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextSt
                         border 
                         border-white/10 
                         rounded-xl
-                        px-4
-                        py-3
+                        px-3
+                        sm:px-4
+                        py-2
+                        sm:py-3     
                         mt-1
                         text-white
                         text-sm
@@ -146,8 +150,10 @@ export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextSt
                         border 
                         border-white/10 
                         rounded-xl
-                        px-4
-                        py-3
+                        px-3
+                        sm:px-4
+                        py-2
+                        sm:py-3
                         mt-1
                         text-white
                         text-sm
@@ -190,15 +196,17 @@ export const SignUpStepOne = ({ formData, setFormData, agreed, setAgreed, nextSt
                 <label className="text-sm text-zinc-400">Confirm Password <span className="text-purple-500">*</span></label>
                 <input
                     type="password"
-                    placeholder="Repeat your password"
+                    placeholder="Confirm your password"
                     className="
                             w-full 
                             bg-zinc-900 
                             border 
                             border-white/10 
                             rounded-xl
-                            px-4
-                            py-3
+                            px-3
+                            sm:px-4
+                            py-2
+                            sm:py-3
                             mt-1
                             text-white
                             text-sm
